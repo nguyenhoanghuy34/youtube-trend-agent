@@ -18,13 +18,40 @@
 
 **YouTube Trend Intelligence Agent** analyzes YouTube trends and converts them into actionable marketing insights.
 
+<p align="center">
+  <img 
+    src="docs/images/agent_structure.png"
+    alt="YouTube Trend Intelligence Agent Architecture"
+    width="850"
+  />
+</p>
+
+### 🏗️ Architecture
+
+The system follows a **multi-agent architecture** orchestrated by **LangGraph**:
+
 ```text
-YouTube Data
-     ↓
-Trend Detection
-     ↓
-AI Analysis
-     ↓
+User Query
+    ↓
+Router Agent
+    ↓
+┌──────────────────────────────────────────────┐
+│              LangGraph Orchestrator          │
+├──────────────────────────────────────────────┤
+│                                              │
+│  Trend Discovery     → Find trending videos │
+│  Competitor Analysis → Analyze channels      │
+│  Audience Insight    → Analyze engagement    │
+│  Content Generation  → Generate ideas        │
+│                                              │
+└──────────────────────────────────────────────┘
+    ↓
+YouTube Data API + Search / Analytics Tools
+    ↓
+Gemini LLM
+    ↓
+Analysis & Synthesis
+    ↓
 Marketing Insights
-     ↓
+    ↓
 Actionable Recommendations
