@@ -10,6 +10,10 @@ from app.agent.topic_analysis_prompts import (
     TOPIC_TREND_ANALYSIS_PROMPT,
 )
 
+from app.storage.trend_store import (
+    save_snapshot,
+)
+
 from app.analysis.trend_scorer import (
     score_videos,
 )
@@ -180,6 +184,7 @@ def youtube_node(
         "Fetching general trends..."
     )
 
+    # 1. Get current trending videos
     videos = get_top_10_trending_videos(
         region_code="VN"
     )
@@ -189,17 +194,42 @@ def youtube_node(
         f"Fetched {len(videos)} videos"
     )
 
-    videos = score_videos(videos)
+    # 2. Calculate trend scores
+    videos = score_videos(
+        videos
+    )
 
+    print(
+        "[Trend] "
+        "Trend scores calculated"
+    )
+
+    # 3. Save historical snapshot
+    save_snapshot(
+        videos
+    )
+
+    print(
+        "[Trend] "
+        "Snapshot saved"
+    )
+
+    # 4. Format data for Gemini
     videos_text = format_trending_videos(
         videos
     )
 
+    # 5. Analyze trends with Gemini
     prompt = ChatPromptTemplate.from_template(
         TREND_ANALYSIS_PROMPT
     )
 
     chain = prompt | llm
+
+    print(
+        "[Trend] "
+        "Analyzing videos..."
+    )
 
     result = chain.invoke(
         {
@@ -211,6 +241,12 @@ def youtube_node(
         result
     )
 
+    print(
+        "[Trend] "
+        "Analysis completed"
+    )
+
+    # 6. Return state
     return {
         **state,
         "trend_data": videos,
