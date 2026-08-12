@@ -24,3 +24,47 @@ def get_rising_trends(
         current,
         top_n=top_n,
     )
+
+
+if __name__ == "__main__":
+
+    trends = get_rising_trends(
+        top_n=10
+    )
+
+    print(
+        "\n========== RISING TRENDS ==========\n"
+    )
+
+    for index, video in enumerate(
+        trends,
+        start=1,
+    ):
+
+        print(
+            f"#{index} "
+            f"{video['title']}"
+        )
+
+        print(
+            f"Views: "
+            f"{video['views']:,}"
+        )
+
+        print(
+            f"Growth: "
+            f"{video['growth_rate']}%"
+        )
+
+        print(
+            f"Velocity: "
+            f"{video['view_velocity']:,.0f} "
+            f"views/hour"
+        )
+
+        print(
+            f"Rising Score: "
+            f"{video['rising_score']}"
+        )
+
+        print("-" * 70)
