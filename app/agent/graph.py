@@ -10,6 +10,10 @@ from app.agent.topic_analysis_prompts import (
     TOPIC_TREND_ANALYSIS_PROMPT,
 )
 
+from app.analysis.trend_scorer import (
+    score_videos,
+)
+
 from app.services.youtube_service import (
     get_top_10_trending_videos,
     search_youtube_videos,
@@ -185,6 +189,8 @@ def youtube_node(
         f"Fetched {len(videos)} videos"
     )
 
+    videos = score_videos(videos)
+
     videos_text = format_trending_videos(
         videos
     )
@@ -195,11 +201,6 @@ def youtube_node(
 
     chain = prompt | llm
 
-    print(
-        "[Trend] "
-        "Analyzing videos..."
-    )
-
     result = chain.invoke(
         {
             "videos": videos_text
@@ -208,11 +209,6 @@ def youtube_node(
 
     analysis = get_text_content(
         result
-    )
-
-    print(
-        "[Trend] "
-        "Analysis completed"
     )
 
     return {
