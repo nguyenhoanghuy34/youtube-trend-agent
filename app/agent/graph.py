@@ -13,6 +13,10 @@ from app.services.youtube_service import (
 )
 from app.config.settings import settings
 
+from app.agent.trend_prompts import (
+    TREND_ANALYSIS_PROMPT,
+)
+
 
 llm = ChatGoogleGenerativeAI(
     model=settings.GEMINI_MODEL,
@@ -108,19 +112,37 @@ def youtube_node(
         region_code="VN"
     )
 
-    response = format_trending_videos(
-        videos
-    )
-
     print(
         f"[YouTube] "
         f"Fetched {len(videos)} videos"
     )
 
+    videos_text = format_trending_videos(
+        videos
+    )
+
+    prompt = ChatPromptTemplate.from_template(
+        TREND_ANALYSIS_PROMPT
+    )
+
+    chain = prompt | llm
+
+    print("[Trend] Analyzing videos...")
+
+    result = chain.invoke(
+        {
+            "videos": videos_text
+        }
+    )
+
+    analysis = get_text_content(result)
+
+    print("[Trend] Analysis completed")
+
     return {
         **state,
         "trend_data": videos,
-        "response": response,
+        "response": analysis,
     }
 
 
