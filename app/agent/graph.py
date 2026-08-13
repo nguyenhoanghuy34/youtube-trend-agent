@@ -27,6 +27,15 @@ from app.services.youtube_service import (
 
 from app.config.settings import settings
 
+from app.agent.intent_router import (
+    normalize_route,
+    route_after_router,
+)
+
+from app.services.trend_service import (
+    get_rising_trends,
+)
+
 
 # =========================================================
 # LLM
@@ -92,16 +101,9 @@ def router_node(
         }
     )
 
-    route = (
+    route = normalize_route(
         get_text_content(result)
-        .strip()
-        .upper()
     )
-
-    if "YOUTUBE" in route:
-        route = "YOUTUBE"
-    else:
-        route = "MODEL"
 
     print(
         f"[Router] "
@@ -118,6 +120,74 @@ def router_node(
     }
 
 
+def rising_trend_node(
+    state: AgentState,
+) -> AgentState:
+
+    print(
+        "[Rising Trend] "
+        "Calculating rising trends..."
+    )
+
+    trends = get_rising_trends(
+        top_n=10
+    )
+
+    if not trends:
+
+        return {
+            **state,
+            "trend_data": [],
+            "response": (
+                "Chưa có đủ dữ liệu lịch sử "
+                "để xác định trend đang tăng mạnh. "
+                "Cần ít nhất 2 snapshot."
+            ),
+        }
+
+    lines = [
+        "Các trend/video đang tăng mạnh:",
+        "",
+    ]
+
+    for index, video in enumerate(
+        trends,
+        start=1,
+    ):
+
+        lines.append(
+            f"#{index} "
+            f"{video['title']}"
+        )
+
+        lines.append(
+            f"Growth: "
+            f"{video['growth_rate']}%"
+        )
+
+        lines.append(
+            f"Velocity: "
+            f"{video['view_velocity']:,.0f} "
+            f"views/hour"
+        )
+
+        lines.append(
+            f"Rising Score: "
+            f"{video['rising_score']}"
+        )
+
+        lines.append(
+            f"URL: {video['url']}"
+        )
+
+        lines.append("")
+
+    return {
+        **state,
+        "trend_data": trends,
+        "response": "\n".join(lines),
+    }
+
 # =========================================================
 # Model
 # =========================================================
@@ -130,45 +200,6 @@ def model_node(
         **state,
         "response": "Đây là General",
     }
-
-
-# =========================================================
-# YouTube Query Classification
-# =========================================================
-
-def route_youtube_query(
-    state: AgentState,
-) -> str:
-
-    message = (
-        state["user_message"]
-        .lower()
-    )
-
-    topic_keywords = [
-        "về",
-        "about",
-        "chủ đề",
-        "topic",
-        "ai",
-        "du lịch",
-        "thời trang",
-        "game",
-        "technology",
-        "công nghệ",
-    ]
-
-    if any(
-        keyword in message
-        for keyword in topic_keywords
-    ):
-        print("[YouTube] → TOPIC")
-
-        return "topic"
-
-    print("[YouTube] → GENERAL")
-
-    return "general"
 
 
 # =========================================================
@@ -390,11 +421,6 @@ def build_graph():
     )
 
     graph.add_node(
-        "youtube_query",
-        lambda state: state,
-    )
-
-    graph.add_node(
         "youtube",
         youtube_node,
     )
@@ -409,39 +435,36 @@ def build_graph():
         topic_trend_node,
     )
 
-    # START → Router
+    graph.add_node(
+        "rising_trend",
+        rising_trend_node,
+    )
+
+    # START
     graph.add_edge(
         START,
         "router",
     )
 
-    # Router → MODEL / YOUTUBE
+    # Router
     graph.add_conditional_edges(
         "router",
         route_after_router,
         {
             "model": "model",
-            "youtube_query": "youtube_query",
+            "trend": "youtube",
+            "rising_trend": "rising_trend",
+            "topic_trend": "extract_topic",
         },
     )
 
-    # YouTube → GENERAL / TOPIC
-    graph.add_conditional_edges(
-        "youtube_query",
-        route_youtube_query,
-        {
-            "general": "youtube",
-            "topic": "extract_topic",
-        },
-    )
-
-    # Topic → Search
+    # Topic
     graph.add_edge(
         "extract_topic",
         "topic_trend",
     )
 
-    # End nodes
+    # End
     graph.add_edge(
         "model",
         END,
@@ -454,6 +477,11 @@ def build_graph():
 
     graph.add_edge(
         "topic_trend",
+        END,
+    )
+
+    graph.add_edge(
+        "rising_trend",
         END,
     )
 
