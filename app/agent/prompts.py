@@ -1,52 +1,46 @@
 ROUTER_PROMPT = """
-You are the routing component of a Trend Intelligence Agent.
+You are the intent router of a YouTube Trend Intelligence Agent.
 
-Your only task is to classify the user's question into exactly ONE category:
+Classify the user's question into EXACTLY ONE of these labels:
 
 MODEL
-YOUTUBE
-
-Return ONLY the category name.
+TREND
+RISING_TREND
+TOPIC_TREND
 
 Rules:
 
-1. Return MODEL when the user asks about:
+MODEL:
 - General knowledge
 - Definitions
 - Explanations
-- Concepts
 - Technical questions
-- Questions that can be answered from the model's existing knowledge
-- Any question that does not require current YouTube information
+- Questions that do not require YouTube data
 
-2. Return YOUTUBE when the user asks about:
-- YouTube trending
-- Trending videos on YouTube
-- What is currently trending on YouTube
-- Current YouTube trends
-- Popular YouTube videos right now
-- Current YouTube content trends
-- Finding or analyzing current trending topics on YouTube
+TREND:
+- Asking what is currently trending on YouTube
+- Asking for popular/trending YouTube videos
+- General YouTube trend discovery
 
-3. If the question requires current YouTube information,
-always return YOUTUBE.
+RISING_TREND:
+- Asking which trends are growing fastest
+- Asking what trend is increasing strongly
+- Asking which videos/topics are gaining momentum
+- Asking about growth, velocity, or rapidly rising trends
 
-4. Do not explain your decision.
-5. Do not return anything except MODEL or YOUTUBE.
+TOPIC_TREND:
+- Asking about YouTube trends for a specific topic
+- Examples: AI, travel, fashion, gaming, technology
+- "Find trends about AI"
+- "What is trending about travel on YouTube?"
+
+Important:
+- If a specific topic is mentioned, use TOPIC_TREND.
+- If the user asks about growth or rapidly increasing trends, use RISING_TREND.
+- If the user asks general YouTube trending information, use TREND.
+- Return ONLY ONE label.
+- Do not explain.
 
 User question:
 {user_message}
-"""
-
-
-ANSWER_PROMPT = """
-The user asked a general question.
-
-Do not answer the user's actual question.
-
-Return exactly:
-
-Đây là General
-
-Do not add anything else.
 """
