@@ -2,37 +2,37 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.graph import StateGraph, START, END
 
-from app.agent.state import AgentState
-from app.agent.prompts import ROUTER_PROMPT
-from app.agent.trend_prompts import TREND_ANALYSIS_PROMPT
-from app.agent.topic_prompts import TOPIC_EXTRACTION_PROMPT
-from app.agent.topic_analysis_prompts import (
+from backend.app.agent.state import AgentState
+from backend.app.agent.prompts import ROUTER_PROMPT
+from backend.app.agent.trend_prompts import TREND_ANALYSIS_PROMPT
+from backend.app.agent.topic_prompts import TOPIC_EXTRACTION_PROMPT
+from backend.app.agent.topic_analysis_prompts import (
     TOPIC_TREND_ANALYSIS_PROMPT,
 )
 
-from app.storage.trend_store import (
+from backend.app.storage.trend_store import (
     save_snapshot,
 )
 
-from app.analysis.trend_scorer import (
+from backend.app.analysis.trend_scorer import (
     score_videos,
 )
 
-from app.services.youtube_service import (
+from backend.app.services.youtube_service import (
     get_top_10_trending_videos,
     search_youtube_videos,
     format_trending_videos,
     format_search_videos,
 )
 
-from app.config.settings import settings
+from backend.app.config.settings import settings
 
-from app.agent.intent_router import (
+from backend.app.agent.intent_router import (
     normalize_route,
     route_after_router,
 )
 
-from app.services.trend_service import (
+from backend.app.services.trend_service import (
     get_rising_trends,
 )
 

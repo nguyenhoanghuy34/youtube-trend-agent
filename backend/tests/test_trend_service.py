@@ -1,4 +1,4 @@
-from app.services.trend_service import (
+from backend.app.services.trend_service import (
     get_rising_trends,
 )
 

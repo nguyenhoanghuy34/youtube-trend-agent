@@ -1,4 +1,4 @@
-from app.storage.trend_store import (
+from backend.app.storage.trend_store import (
     save_snapshot,
     load_snapshots,
 )

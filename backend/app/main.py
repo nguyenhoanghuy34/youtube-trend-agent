@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from app.agent.graph import agent_graph
+from backend.app.agent.graph import agent_graph
 
 
 app = FastAPI()

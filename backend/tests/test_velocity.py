@@ -1,4 +1,4 @@
-from app.analysis.velocity import (
+from backend.app.analysis.velocity import (
     calculate_view_velocity,
     calculate_growth_rate,
 )

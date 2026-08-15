@@ -1,8 +1,8 @@
-from app.storage.trend_store import (
+from backend.app.storage.trend_store import (
     load_snapshots,
 )
 
-from app.analysis.rising_trends import (
+from backend.app.analysis.rising_trends import (
     detect_rising_trends,
 )
 
