@@ -386,20 +386,6 @@ def topic_trend_node(
 
 
 # =========================================================
-# Router → Next Node
-# =========================================================
-
-def route_after_router(
-    state: AgentState,
-) -> str:
-
-    if state["route"] == "YOUTUBE":
-        return "youtube_query"
-
-    return "model"
-
-
-# =========================================================
 # Build LangGraph
 # =========================================================
 

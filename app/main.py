@@ -4,50 +4,44 @@ from pydantic import BaseModel
 from app.agent.graph import agent_graph
 
 
-app = FastAPI(
-    title="YouTube Trend Agent",
-    version="0.1.0",
-)
+app = FastAPI()
 
 
 class ChatRequest(BaseModel):
     message: str
 
 
-class ChatResponse(BaseModel):
-    route: str
-    response: str
-
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
-
-
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/chat")
 def chat(request: ChatRequest):
 
     try:
+        result = agent_graph.invoke(
+            {
+                "user_message": request.message,
+                "route": "",
+                "topic": "",
+                "trend_data": [],
+                "response": "",
+            }
+        )
 
-        result = agent_graph.invoke({
-            "user_message": request.message,
-            "route": "",
-            "response": "",
-        })
-
-        return {
-            "route": result["route"],
-            "response": result["response"],
-        }
+        # Người dùng chỉ nhận nội dung trả lời
+        return result["response"]
 
     except Exception as e:
 
-        print("\n========== AGENT ERROR ==========")
-        print(type(e).__name__)
-        print(str(e))
-        print("=================================\n")
+        error = str(e)
+
+        if (
+            "RESOURCE_EXHAUSTED" in error
+            or "429" in error
+        ):
+            raise HTTPException(
+                status_code=429,
+                detail="Gemini API quota đã hết. Vui lòng thử lại sau.",
+            )
 
         raise HTTPException(
             status_code=500,
-            detail=str(e),
+            detail="Agent gặp lỗi khi xử lý yêu cầu.",
         )
