@@ -11,6 +11,14 @@
 
 ---
 
+## 🖥️ Web Layout
+
+<p align="center">
+  <img src="assets/images/web_layout.png" width="750" alt="YouTube Trend Agent Web Layout">
+</p>
+
+---
+
 ## 🚀 Overview
 
 **YouTube Trend Agent** is an AI agent that collects and analyzes YouTube trends to provide:
