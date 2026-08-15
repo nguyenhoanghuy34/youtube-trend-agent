@@ -1,12 +1,87 @@
-import { Bot, Send } from "lucide-react";
+import { useState } from "react";
+import { Bot } from "lucide-react";
 
-export default function ChatPanel() {
+import { sendChatMessage } from "../../api/chatApi";
+
+import ChatMessage from "./ChatMessage";
+import ChatInput from "./ChatInput";
+
+export default function ChatPanel({ onVideosUpdate }) {
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      role: "assistant",
+      message:
+        "Hi! I’m your Trend Intelligence Agent. Ask me anything.",
+    },
+  ]);
+
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSend() {
+    const userMessage = input.trim();
+
+    if (!userMessage || loading) {
+      return;
+    }
+
+    setInput("");
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        role: "user",
+        message: userMessage,
+      },
+    ]);
+
+    setLoading(true);
+
+    try {
+      const data = await sendChatMessage(userMessage);
+
+      // Update Report panel
+      if (data.trend_data && onVideosUpdate) {
+        onVideosUpdate(data.trend_data);
+      }
+
+      // Update Chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          role: "assistant",
+          message: data.response,
+        },
+      ]);
+
+    } catch (error) {
+      console.error("Chat API error:", error);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          role: "assistant",
+          message:
+            "Sorry, I couldn't connect to the agent.",
+        },
+      ]);
+
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <section className="flex h-full min-h-0 flex-col">
 
       {/* Header */}
       <div className="border-b border-slate-200 px-5 py-4">
         <div className="flex items-center gap-3">
+
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
             <Bot size={18} />
           </div>
@@ -17,44 +92,40 @@ export default function ChatPanel() {
             </h2>
 
             <p className="text-xs text-slate-500">
-              Ask about YouTube trends
+              Ask about trends and marketing
             </p>
           </div>
+
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 space-y-4 overflow-y-auto p-5">
 
-        <div className="max-w-md rounded-2xl bg-slate-100 px-4 py-3">
-          <p className="text-sm leading-6 text-slate-700">
-            Hi! I’m your Trend Intelligence Agent.
-            Ask me about YouTube trends, topics,
-            competitors, or content ideas.
-          </p>
-        </div>
+        {messages.map((message) => (
+          <ChatMessage
+            key={message.id}
+            role={message.role}
+            message={message.message}
+          />
+        ))}
+
+        {loading && (
+          <div className="text-sm text-slate-400">
+            Agent is thinking...
+          </div>
+        )}
 
       </div>
 
       {/* Input */}
       <div className="border-t border-slate-200 p-4">
-
-        <div className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white p-2">
-
-          <input
-            type="text"
-            placeholder="Ask anything..."
-            className="flex-1 bg-transparent px-3 py-2 text-sm outline-none placeholder:text-slate-400"
-          />
-
-          <button
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white transition hover:bg-slate-700"
-          >
-            <Send size={16} />
-          </button>
-
-        </div>
-
+        <ChatInput
+          value={input}
+          onChange={setInput}
+          onSend={handleSend}
+          loading={loading}
+        />
       </div>
 
     </section>
