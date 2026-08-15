@@ -1,4 +1,4 @@
-from backend.app.analysis.trend_scorer import (
+from app.analysis.trend_scorer import (
     calculate_engagement_rate,
     calculate_trend_score,
     score_videos,

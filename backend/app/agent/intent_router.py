@@ -1,4 +1,4 @@
-from backend.app.agent.state import AgentState
+from app.agent.state import AgentState
 
 
 VALID_ROUTES = {
