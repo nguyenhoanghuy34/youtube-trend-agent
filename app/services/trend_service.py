@@ -14,14 +14,11 @@ def get_rising_trends(
     snapshots = load_snapshots()
 
     if len(snapshots) < 2:
+
         return []
 
-    previous = snapshots[-2]
-    current = snapshots[-1]
-
     return detect_rising_trends(
-        previous,
-        current,
+        snapshots=snapshots,
         top_n=top_n,
     )
 
@@ -43,12 +40,19 @@ if __name__ == "__main__":
 
         print(
             f"#{index} "
-            f"{video['title']}"
+            f"{video.get('title', '')}"
+        )
+
+        print(
+            f"Snapshots: "
+            f"{video['snapshot_count']}"
         )
 
         print(
             f"Views: "
-            f"{video['views']:,}"
+            f"{video['first_views']:,}"
+            f" → "
+            f"{video['latest_views']:,}"
         )
 
         print(
@@ -58,8 +62,18 @@ if __name__ == "__main__":
 
         print(
             f"Velocity: "
-            f"{video['view_velocity']:,.0f} "
-            f"views/hour"
+            f"{video['recent_velocity']:,.0f}"
+            f" views/hour"
+        )
+
+        print(
+            f"Acceleration: "
+            f"{video['acceleration']:,.0f}"
+        )
+
+        print(
+            f"Consistency: "
+            f"{video['growth_consistency']}"
         )
 
         print(

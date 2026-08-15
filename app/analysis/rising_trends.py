@@ -1,4 +1,5 @@
 from datetime import datetime
+import math
 
 
 def _parse_time(timestamp: str) -> datetime:
@@ -7,115 +8,250 @@ def _parse_time(timestamp: str) -> datetime:
     )
 
 
-def calculate_video_growth(
-    previous_snapshot: dict,
-    current_snapshot: dict,
-) -> list[dict]:
+def _linear_slope(points: list[tuple[float, float]]) -> float:
+    """
+    Tính slope bằng linear regression đơn giản.
 
-    previous_videos = {
-        video["video_id"]: video
-        for video in previous_snapshot.get(
-            "videos", []
+    x = thời gian (giờ)
+    y = views
+    """
+
+    if len(points) < 2:
+        return 0.0
+
+    x = [point[0] for point in points]
+    y = [point[1] for point in points]
+
+    x_mean = sum(x) / len(x)
+    y_mean = sum(y) / len(y)
+
+    numerator = sum(
+        (xi - x_mean) * (yi - y_mean)
+        for xi, yi in zip(x, y)
+    )
+
+    denominator = sum(
+        (xi - x_mean) ** 2
+        for xi in x
+    )
+
+    if denominator == 0:
+        return 0.0
+
+    return numerator / denominator
+
+
+def calculate_historical_metrics(
+    snapshots: list[dict],
+    video_id: str,
+) -> dict:
+
+    points = []
+
+    video_data = []
+
+    first_time = None
+
+    for snapshot in snapshots:
+
+        timestamp = snapshot.get(
+            "timestamp"
         )
-    }
 
-    current_videos = current_snapshot.get(
-        "videos", []
-    )
-
-    previous_time = _parse_time(
-        previous_snapshot["timestamp"]
-    )
-
-    current_time = _parse_time(
-        current_snapshot["timestamp"]
-    )
-
-    hours = (
-        current_time - previous_time
-    ).total_seconds() / 3600
-
-    if hours <= 0:
-        return []
-
-    results = []
-
-    for video in current_videos:
-
-        video_id = video["video_id"]
-
-        if video_id not in previous_videos:
+        if not timestamp:
             continue
 
-        previous = previous_videos[video_id]
-
-        previous_views = previous.get(
-            "views", 0
+        current_time = _parse_time(
+            timestamp
         )
 
-        current_views = video.get(
-            "views", 0
+        if first_time is None:
+            first_time = current_time
+
+        for video in snapshot.get(
+            "videos",
+            [],
+        ):
+
+            if video.get(
+                "video_id"
+            ) != video_id:
+                continue
+
+            hours = (
+                current_time - first_time
+            ).total_seconds() / 3600
+
+            views = video.get(
+                "views",
+                0,
+            )
+
+            points.append(
+                (
+                    hours,
+                    views,
+                )
+            )
+
+            video_data.append(
+                video
+            )
+
+            break
+
+    if len(points) < 2:
+        return {}
+
+    # -----------------------------
+    # Basic growth
+    # -----------------------------
+
+    first_views = points[0][1]
+    last_views = points[-1][1]
+
+    total_growth = (
+        last_views - first_views
+    )
+
+    if first_views > 0:
+
+        growth_rate = (
+            total_growth
+            / first_views
+        ) * 100
+
+    else:
+        growth_rate = 0.0
+
+    # -----------------------------
+    # Linear regression
+    # -----------------------------
+
+    velocity = _linear_slope(
+        points
+    )
+
+    # -----------------------------
+    # Recent velocity
+    # -----------------------------
+
+    recent_points = points[-3:]
+
+    recent_velocity = _linear_slope(
+        recent_points
+    )
+
+    # -----------------------------
+    # Previous velocity
+    # -----------------------------
+
+    previous_points = points[:-2]
+
+    if len(previous_points) >= 2:
+
+        previous_velocity = _linear_slope(
+            previous_points
         )
 
-        previous_likes = previous.get(
-            "likes", 0
+    else:
+
+        previous_velocity = 0.0
+
+    # -----------------------------
+    # Acceleration
+    # -----------------------------
+
+    acceleration = (
+        recent_velocity
+        - previous_velocity
+    )
+
+    # -----------------------------
+    # Consistency
+    # -----------------------------
+
+    positive_changes = 0
+    total_changes = 0
+
+    for i in range(1, len(points)):
+
+        change = (
+            points[i][1]
+            - points[i - 1][1]
         )
 
-        current_likes = video.get(
-            "likes", 0
+        total_changes += 1
+
+        if change > 0:
+            positive_changes += 1
+
+    if total_changes > 0:
+
+        consistency = (
+            positive_changes
+            / total_changes
         )
 
-        view_growth = (
-            current_views
-            - previous_views
-        )
+    else:
 
-        like_growth = (
-            current_likes
-            - previous_likes
-        )
+        consistency = 0.0
 
-        if previous_views > 0:
-            growth_rate = (
-                view_growth
-                / previous_views
-            ) * 100
-        else:
-            growth_rate = 0.0
+    latest_video = video_data[-1]
 
-        view_velocity = (
-            view_growth / hours
-        )
-
-        like_velocity = (
-            like_growth / hours
-        )
-
-        results.append(
-            {
-                **video,
-                "view_growth": view_growth,
-                "growth_rate": round(
-                    growth_rate,
-                    2,
-                ),
-                "view_velocity": round(
-                    view_velocity,
-                    2,
-                ),
-                "like_velocity": round(
-                    like_velocity,
-                    2,
-                ),
-            }
-        )
-
-    return results
+    return {
+        **latest_video,
+        "first_views": first_views,
+        "latest_views": last_views,
+        "total_growth": total_growth,
+        "growth_rate": round(
+            growth_rate,
+            2,
+        ),
+        "view_velocity": round(
+            velocity,
+            2,
+        ),
+        "recent_velocity": round(
+            recent_velocity,
+            2,
+        ),
+        "acceleration": round(
+            acceleration,
+            2,
+        ),
+        "growth_consistency": round(
+            consistency,
+            2,
+        ),
+        "snapshot_count": len(points),
+    }
 
 
 def calculate_rising_score(
     video: dict,
 ) -> float:
+
+    velocity = max(
+        video.get(
+            "recent_velocity",
+            0,
+        ),
+        0,
+    )
+
+    acceleration = max(
+        video.get(
+            "acceleration",
+            0,
+        ),
+        0,
+    )
+
+    consistency = video.get(
+        "growth_consistency",
+        0,
+    )
 
     growth_rate = max(
         video.get(
@@ -125,44 +261,23 @@ def calculate_rising_score(
         0,
     )
 
-    view_velocity = max(
-        video.get(
-            "view_velocity",
-            0,
-        ),
-        0,
+    # Log scaling
+    velocity_score = min(
+        10,
+        math.log10(
+            max(velocity, 1)
+        ) * 1.5,
     )
 
-    engagement = (
-        video.get(
-            "likes",
-            0,
-        )
-        + video.get(
-            "comments",
-            0,
-        )
+    acceleration_score = min(
+        10,
+        math.log10(
+            max(acceleration, 1)
+        ) * 1.5,
     )
 
-    views = max(
-        video.get(
-            "views",
-            1,
-        ),
-        1,
-    )
-
-    engagement_rate = (
-        engagement / views
-    )
-
-    # Normalize bằng log để tránh
-    # video cực lớn áp đảo toàn bộ.
-    velocity_score = (
-        min(
-            10,
-            view_velocity / 10000,
-        )
+    consistency_score = (
+        consistency * 10
     )
 
     growth_score = min(
@@ -170,15 +285,11 @@ def calculate_rising_score(
         growth_rate / 10,
     )
 
-    engagement_score = min(
-        10,
-        engagement_rate * 100,
-    )
-
     score = (
-        0.5 * velocity_score
-        + 0.3 * growth_score
-        + 0.2 * engagement_score
+        0.40 * velocity_score
+        + 0.25 * acceleration_score
+        + 0.20 * consistency_score
+        + 0.15 * growth_score
     )
 
     return round(
@@ -188,26 +299,70 @@ def calculate_rising_score(
 
 
 def detect_rising_trends(
-    previous_snapshot: dict,
-    current_snapshot: dict,
+    snapshots: list[dict],
     top_n: int = 10,
 ) -> list[dict]:
 
-    videos = calculate_video_growth(
-        previous_snapshot,
-        current_snapshot,
-    )
+    if len(snapshots) < 2:
+        return []
 
-    for video in videos:
-        video["rising_score"] = (
-            calculate_rising_score(
-                video
+    # -----------------------------
+    # Collect video IDs
+    # -----------------------------
+
+    video_ids = set()
+
+    for snapshot in snapshots:
+
+        for video in snapshot.get(
+            "videos",
+            [],
+        ):
+
+            video_id = video.get(
+                "video_id"
             )
+
+            if video_id:
+                video_ids.add(
+                    video_id
+                )
+
+    results = []
+
+    # -----------------------------
+    # Analyze every video
+    # -----------------------------
+
+    for video_id in video_ids:
+
+        metrics = calculate_historical_metrics(
+            snapshots,
+            video_id,
         )
 
-    videos.sort(
-        key=lambda x: x["rising_score"],
+        if not metrics:
+            continue
+
+        metrics[
+            "rising_score"
+        ] = calculate_rising_score(
+            metrics
+        )
+
+        results.append(
+            metrics
+        )
+
+    # -----------------------------
+    # Highest rising score first
+    # -----------------------------
+
+    results.sort(
+        key=lambda x: x[
+            "rising_score"
+        ],
         reverse=True,
     )
 
-    return videos[:top_n]
+    return results[:top_n]
