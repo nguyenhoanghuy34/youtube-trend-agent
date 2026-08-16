@@ -4,6 +4,8 @@ from pydantic import BaseModel
 
 from app.agent.graph import agent_graph
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
 
 app = FastAPI()
 app.add_middleware(
@@ -21,7 +23,7 @@ class ChatRequest(BaseModel):
     message: str
 
 
-@app.post("/chat", response_class=PlainTextResponse)
+@app.post("/chat")
 def chat(request: ChatRequest):
 
     try:
@@ -35,7 +37,11 @@ def chat(request: ChatRequest):
             }
         )
 
-        return result["response"]
+        return {
+            "route": result["route"],
+            "response": result["response"],
+            "trend_data": result.get("trend_data", []),
+        }
 
     except Exception as e:
 
