@@ -13,8 +13,6 @@ export default function App() {
     <BrowserRouter>
       <div className="flex h-screen flex-col bg-slate-50">
 
-        <Navbar />
-
         <main className="min-h-0 flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
@@ -23,8 +21,6 @@ export default function App() {
             <Route path="/guidance" element={<Guidance />} />
           </Routes>
         </main>
-
-        <BottomNav />
 
       </div>
     </BrowserRouter>
