@@ -3,24 +3,31 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/layout/Navbar";
 import BottomNav from "./components/layout/BottomNav";
 
-import Home from "./pages/Home";
-import News from "./pages/News";
-import AboutUs from "./pages/AboutUs";
-import Guidance from "./pages/Guidance";
+import ChatPage from "./pages/ChatPage";
+import NewsPage from "./pages/NewsPage";
+import AboutPage from "./pages/AboutPage";
+import GuidancePage from "./pages/GuidancePage";
 
 export default function App() {
   return (
     <BrowserRouter>
       <div className="flex h-screen flex-col bg-slate-50">
 
+        {/* Always visible */}
+        <Navbar />
+
+        {/* Only this area changes */}
         <main className="min-h-0 flex-1">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/about" element={<AboutUs />} />
-            <Route path="/guidance" element={<Guidance />} />
+            <Route path="/" element={<ChatPage />} />
+            <Route path="/news" element={<NewsPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/guidance" element={<GuidancePage />} />
           </Routes>
         </main>
+
+        {/* Always visible */}
+        <BottomNav />
 
       </div>
     </BrowserRouter>
