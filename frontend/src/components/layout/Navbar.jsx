@@ -1,29 +1,55 @@
-import { Activity } from "lucide-react";
+import { NavLink } from "react-router-dom";
+
+const navItems = [
+  {
+    label: "Chat with Agent",
+    path: "/",
+  },
+  {
+    label: "News",
+    path: "/news",
+  },
+  {
+    label: "About Us",
+    path: "/about",
+  },
+  {
+    label: "Guidance",
+    path: "/guidance",
+  },
+];
 
 export default function Navbar() {
   return (
-    <header className="h-16 border-b border-slate-200 bg-white">
-      <div className="flex h-full items-center justify-between px-6">
-        
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white">
-            <Activity size={19} />
-          </div>
+    <header className="border-b border-slate-200 bg-white">
+      <div className="flex h-16 items-center justify-between px-6">
 
-          <div>
-            <h1 className="text-sm font-semibold text-slate-900">
-              Trend Intelligence
-            </h1>
+        {/* Logo */}
+        <NavLink
+          to="/"
+          className="text-lg font-bold tracking-tight text-slate-900"
+        >
+          Trend Intelligence
+        </NavLink>
 
-            <p className="text-xs text-slate-500">
-              AI Marketing Agent
-            </p>
-          </div>
-        </div>
-
-        <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-500">
-          Demo
-        </div>
+        {/* Navigation */}
+        <nav className="flex items-center gap-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `rounded-lg px-4 py-2 text-sm font-medium transition ${
+                  isActive
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
 
       </div>
     </header>
