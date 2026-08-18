@@ -6,6 +6,9 @@ import { sendChatMessage } from "../../api/chatApi";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 
+
+import ThinkingIndicator from "./ThinkingIndicator";
+
 export default function ChatPanel({ onVideosUpdate }) {
   const [messages, setMessages] = useState([
     {
@@ -114,11 +117,9 @@ if (data.trend_data && onVideosUpdate) {
           />
         ))}
 
-        {loading && (
-          <div className="text-sm text-slate-400">
-            Agent is thinking...
-          </div>
-        )}
+{loading && (
+  <ThinkingIndicator variant="ring" />
+)}
 
       </div>
 
