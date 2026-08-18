@@ -43,9 +43,13 @@ export default function ChatPanel({ onVideosUpdate }) {
       const data = await sendChatMessage(userMessage);
 
       // Update Report panel
-      if (data.trend_data && onVideosUpdate) {
-        onVideosUpdate(data.trend_data);
-      }
+if (data.trend_data && onVideosUpdate) {
+  const sortedVideos = [...data.trend_data].sort(
+    (a, b) => a.rank - b.rank
+  );
+
+  onVideosUpdate(sortedVideos);
+}
 
       // Update Chat
       setMessages((prev) => [

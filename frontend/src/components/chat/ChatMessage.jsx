@@ -14,7 +14,9 @@ export default function ChatMessage({ message, role }) {
             : "bg-slate-100 text-slate-700"
         }`}
       >
-        {message}
+<div className="whitespace-pre-line">
+  {message}
+</div>
       </div>
     </div>
   );
