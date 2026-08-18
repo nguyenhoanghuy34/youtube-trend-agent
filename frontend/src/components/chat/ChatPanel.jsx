@@ -9,7 +9,7 @@ import ChatInput from "./ChatInput";
 
 import ThinkingIndicator from "./ThinkingIndicator";
 
-export default function ChatPanel({ onVideosUpdate }) {
+export default function ChatPanel({ onVideosUpdate, theme = "light" }) {
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -86,19 +86,19 @@ if (data.trend_data && onVideosUpdate) {
     <section className="flex h-full min-h-0 flex-col">
 
       {/* Header */}
-      <div className="border-b border-slate-200 px-5 py-4">
+      <div className={`border-b px-5 py-4 ${theme === "dark" ? "border-slate-800" : "border-slate-200"}`}>
         <div className="flex items-center gap-3">
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
+          <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${theme === "dark" ? "bg-slate-800" : "bg-slate-100"}`}>
             <Bot size={18} />
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">
+            <h2 className={`text-sm font-semibold ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
               AI Agent
             </h2>
 
-            <p className="text-xs text-slate-500">
+            <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
               Ask about trends and marketing
             </p>
           </div>
@@ -114,22 +114,24 @@ if (data.trend_data && onVideosUpdate) {
             key={message.id}
             role={message.role}
             message={message.message}
+            theme={theme}
           />
         ))}
 
 {loading && (
-  <ThinkingIndicator variant="ring" />
+  <ThinkingIndicator variant="ring" theme={theme} />
 )}
 
       </div>
 
       {/* Input */}
-      <div className="border-t border-slate-200 p-4">
+      <div className={`border-t p-4 ${theme === "dark" ? "border-slate-800" : "border-slate-200"}`}>
         <ChatInput
           value={input}
           onChange={setInput}
           onSend={handleSend}
           loading={loading}
+          theme={theme}
         />
       </div>
 

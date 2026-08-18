@@ -24,9 +24,9 @@ const items = [
   },
 ];
 
-export default function BottomNav() {
+export default function BottomNav({ theme }) {
   return (
-    <nav className="h-16 border-t border-slate-200 bg-white">
+    <nav className={`h-16 border-t ${theme === "dark" ? "border-slate-800 bg-slate-950" : "border-slate-200 bg-white"}`}>
       <div className="flex h-full items-center justify-center gap-12">
 
         {items.map((item, index) => {
@@ -38,8 +38,12 @@ export default function BottomNav() {
               key={item.label}
               className={`flex flex-col items-center gap-1 text-xs ${
                 index === 0
-                  ? "font-medium text-slate-900"
-                  : "text-slate-400"
+                  ? theme === "dark"
+                    ? "font-medium text-white"
+                    : "font-medium text-slate-900"
+                  : theme === "dark"
+                    ? "text-slate-400"
+                    : "text-slate-400"
               }`}
             >
               <Icon size={18} />

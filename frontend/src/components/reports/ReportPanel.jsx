@@ -1,16 +1,16 @@
 import VideoCard from "./VideoCard";
 
-export default function ReportPanel({ videos = [] }) {
+export default function ReportPanel({ videos = [], theme = "light" }) {
   return (
     <section className="flex h-full min-h-0 flex-col">
 
       {/* Header */}
-      <div className="border-b border-slate-200 px-5 py-4">
-        <h2 className="text-sm font-semibold text-slate-900">
+      <div className={`border-b px-5 py-4 ${theme === "dark" ? "border-slate-800" : "border-slate-200"}`}>
+        <h2 className={`text-sm font-semibold ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
           Intelligence Output
         </h2>
 
-        <p className="text-xs text-slate-500">
+        <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
           Current YouTube trending videos
         </p>
       </div>
@@ -20,7 +20,7 @@ export default function ReportPanel({ videos = [] }) {
 
         {videos.length === 0 ? (
           <div className="flex h-full items-center justify-center">
-            <p className="text-sm text-slate-400">
+            <p className={`text-sm ${theme === "dark" ? "text-slate-500" : "text-slate-400"}`}>
               Ask the agent about YouTube trends to generate a report.
             </p>
           </div>
@@ -29,6 +29,7 @@ export default function ReportPanel({ videos = [] }) {
             <VideoCard
               key={video.video_id}
               video={video}
+              theme={theme}
             />
           ))
         )}

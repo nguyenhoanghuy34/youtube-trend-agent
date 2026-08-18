@@ -1,13 +1,13 @@
-export default function VideoCard({ video }) {
+export default function VideoCard({ video, theme = "light" }) {
   return (
     <a
       href={video.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex h-32 overflow-hidden rounded-lg border border-slate-200 bg-white transition hover:border-slate-300 hover:shadow-sm"
+      className={`flex h-32 overflow-hidden rounded-lg border transition hover:shadow-sm ${theme === "dark" ? "border-slate-700 bg-slate-900 hover:border-slate-600" : "border-slate-200 bg-white hover:border-slate-300"}`}
     >
       {/* Thumbnail */}
-      <div className="relative w-48 shrink-0 bg-slate-100">
+      <div className={`relative w-48 shrink-0 ${theme === "dark" ? "bg-slate-800" : "bg-slate-100"}`}>
         <img
           src={`https://i.ytimg.com/vi/${video.video_id}/hqdefault.jpg`}
           alt={video.title}
@@ -25,17 +25,17 @@ export default function VideoCard({ video }) {
 
         {/* Title */}
         <div>
-          <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-slate-900">
+          <h3 className={`line-clamp-2 text-sm font-semibold leading-5 ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
             {video.title}
           </h3>
 
-          <p className="mt-1 truncate text-xs text-slate-500">
+          <p className={`mt-1 truncate text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
             {video.channel}
           </p>
         </div>
 
         {/* Metrics */}
-        <div className="flex items-center gap-3 text-[11px] text-slate-500">
+        <div className={`flex items-center gap-3 text-[11px] ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
           <span>
             {Number(video.views || 0).toLocaleString()} views
           </span>
@@ -51,11 +51,11 @@ export default function VideoCard({ video }) {
 
         {/* Trend Score */}
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-slate-400">
+          <span className={`text-[10px] ${theme === "dark" ? "text-slate-500" : "text-slate-400"}`}>
             Trend Score
           </span>
 
-          <span className="text-xs font-semibold text-slate-700">
+          <span className={`text-xs font-semibold ${theme === "dark" ? "text-slate-200" : "text-slate-700"}`}>
             {Number(video.trend_score || 0).toFixed(2)}
           </span>
         </div>

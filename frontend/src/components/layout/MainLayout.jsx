@@ -5,27 +5,27 @@ import ReportPanel from "../reports/ReportPanel";
 
 export default function MainLayout() {
   return (
-    <div className="flex h-screen flex-col bg-slate-50">
+    <div className="flex h-screen flex-col bg-white">
 
-      <Navbar />
+      <Navbar theme="light" onThemeChange={() => {}} />
 
       <main className="min-h-0 flex-1 p-4">
 
         <div className="grid h-full min-h-0 grid-cols-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
           <div className="min-h-0 border-r border-slate-200">
-            <ChatPanel />
+            <ChatPanel theme="light" />
           </div>
 
           <div className="min-h-0">
-            <ReportPanel />
+            <ReportPanel theme="light" />
           </div>
 
         </div>
 
       </main>
 
-      <BottomNav />
+      <BottomNav theme="light" />
 
     </div>
   );
