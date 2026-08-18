@@ -27,9 +27,15 @@ export default function Navbar() {
         {/* Logo */}
         <NavLink
           to="/"
-          className="text-lg font-bold tracking-tight text-slate-900"
+          className="flex items-center gap-3"
         >
-          Trend Intelligence
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
+            YTA
+          </div>
+
+          <span className="text-lg font-bold tracking-tight text-slate-900">
+            Youtube Trending Agent
+          </span>
         </NavLink>
 
         {/* Navigation */}
