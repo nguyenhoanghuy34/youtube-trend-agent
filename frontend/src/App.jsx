@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import Navbar from "./components/layout/Navbar";
 import BottomNav from "./components/layout/BottomNav";
@@ -13,6 +13,10 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 
 export default function App() {
+  const [authUser, setAuthUser] = useState(() => {
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("theme") || "light";
   });
@@ -22,25 +26,48 @@ export default function App() {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
+  useEffect(() => {
+    function handleStorageChange() {
+      const savedUser = localStorage.getItem("user");
+      setAuthUser(savedUser ? JSON.parse(savedUser) : null);
+    }
+
+    function handleAuthChange() {
+      handleStorageChange();
+    }
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("authchange", handleAuthChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("authchange", handleAuthChange);
+    };
+  }, []);
+
+  function handleLogout() {
+    localStorage.removeItem("user");
+    setAuthUser(null);
+    window.dispatchEvent(new Event("authchange"));
+  }
+
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* Authentication */}
         <Route
           path="/login"
-          element={<LoginPage />}
+          element={authUser ? <Navigate to="/" replace /> : <LoginPage />}
         />
 
         <Route
           path="/register"
-          element={<RegisterPage />}
+          element={authUser ? <Navigate to="/" replace /> : <RegisterPage />}
         />
 
-        {/* Main application */}
         <Route
           path="/*"
           element={
+            authUser ? (
             <div
               className={`flex h-screen flex-col ${
                 theme === "dark" ? "bg-slate-950" : "bg-slate-50"
@@ -49,6 +76,7 @@ export default function App() {
               <Navbar
                 theme={theme}
                 onThemeChange={setTheme}
+                onLogout={handleLogout}
               />
 
               <main className="min-h-0 flex-1">
@@ -77,6 +105,9 @@ export default function App() {
 
               <BottomNav theme={theme} />
             </div>
+            ) : (
+              <Navigate to="/login" replace />
+            )
           }
         />
 

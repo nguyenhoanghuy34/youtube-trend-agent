@@ -32,6 +32,7 @@ export default function LoginPage() {
     try {
       const data = await loginUser(form);
       localStorage.setItem("user", JSON.stringify(data.user));
+      window.dispatchEvent(new Event("authchange"));
       navigate("/", { replace: true });
     } catch (err) {
       setError(

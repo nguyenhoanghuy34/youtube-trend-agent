@@ -40,6 +40,7 @@ export default function RegisterPage() {
 
     try {
       await registerUser(form);
+      window.dispatchEvent(new Event("authchange"));
       navigate("/login");
     } catch (err) {
       setError(

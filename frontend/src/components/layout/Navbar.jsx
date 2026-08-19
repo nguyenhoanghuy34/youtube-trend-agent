@@ -21,7 +21,7 @@ const navItems = [
   },
 ];
 
-export default function Navbar({ theme, onThemeChange }) {
+export default function Navbar({ theme, onThemeChange, onLogout }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -163,11 +163,14 @@ export default function Navbar({ theme, onThemeChange }) {
                 {/* Logout */}
                 <div className="p-2">
                   <button
-                    disabled
-                    className={`flex w-full cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm opacity-50 ${
+                    onClick={() => {
+                      onLogout?.();
+                      setOpen(false);
+                    }}
+                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
                       theme === "dark"
                         ? "text-slate-400"
-                        : "text-slate-500"
+                        : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                     }`}
                   >
                     <LogOut size={16} />
