@@ -4,25 +4,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # =========================
-    # Gemini
-    # =========================
+
     GEMINI_API_KEY: str
     GEMINI_MODEL: str = "gemini-3.5-flash"
 
-    # =========================
-    # YouTube
-    # =========================
     YOUTUBE_API_KEY: str
 
-    # =========================
-    # Database
-    # =========================
     DATABASE_URL: str
 
-    # =========================
-    # Authentication
-    # =========================
     JWT_SECRET_KEY: str
 
     model_config = SettingsConfigDict(

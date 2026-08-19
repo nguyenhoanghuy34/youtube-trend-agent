@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/layout/Navbar";
@@ -11,63 +12,71 @@ import GuidancePage from "./pages/GuidancePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 
-function MainLayout({ children }) {
-  return (
-    <div className="flex h-screen flex-col bg-slate-950">
-      <Navbar />
-
-      <main className="min-h-0 flex-1">
-        {children}
-      </main>
-
-      <BottomNav />
-    </div>
-  );
-}
-
 export default function App() {
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("theme") || "light";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("theme", theme);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
+
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* Auth pages */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-
-        {/* Main app */}
+        {/* Authentication */}
         <Route
-          path="/"
-          element={
-            <MainLayout>
-              <ChatPage />
-            </MainLayout>
-          }
+          path="/login"
+          element={<LoginPage />}
         />
 
         <Route
-          path="/news"
-          element={
-            <MainLayout>
-              <NewsPage />
-            </MainLayout>
-          }
+          path="/register"
+          element={<RegisterPage />}
         />
 
+        {/* Main application */}
         <Route
-          path="/about"
+          path="/*"
           element={
-            <MainLayout>
-              <AboutPage />
-            </MainLayout>
-          }
-        />
+            <div
+              className={`flex h-screen flex-col ${
+                theme === "dark" ? "bg-slate-950" : "bg-slate-50"
+              }`}
+            >
+              <Navbar
+                theme={theme}
+                onThemeChange={setTheme}
+              />
 
-        <Route
-          path="/guidance"
-          element={
-            <MainLayout>
-              <GuidancePage />
-            </MainLayout>
+              <main className="min-h-0 flex-1">
+                <Routes>
+                  <Route
+                    path="/"
+                    element={<ChatPage theme={theme} />}
+                  />
+
+                  <Route
+                    path="/news"
+                    element={<NewsPage theme={theme} />}
+                  />
+
+                  <Route
+                    path="/about"
+                    element={<AboutPage theme={theme} />}
+                  />
+
+                  <Route
+                    path="/guidance"
+                    element={<GuidancePage theme={theme} />}
+                  />
+                </Routes>
+              </main>
+
+              <BottomNav theme={theme} />
+            </div>
           }
         />
 

@@ -1,13 +1,25 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.agent.graph import agent_graph
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+
+from app.db.database import Base, engine
+from app.db.models import User
+
+from app.api.chat import router as chat_router
+from app.routes.auth import router as auth_router
 
 
-app = FastAPI()
+Base.metadata.create_all(bind=engine)
+
+
+app = FastAPI(
+    title="YouTube Trending Agent API",
+    version="1.0.0",
+)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -19,48 +31,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class ChatRequest(BaseModel):
-    message: str
 
+# AUTH ROUTER
+app.include_router(
+    auth_router,
+    prefix="/auth",
+    tags=["Authentication"],
+)
 
-@app.post("/chat")
-def chat(request: ChatRequest):
-
-    try:
-        result = agent_graph.invoke(
-            {
-                "user_message": request.message,
-                "route": "",
-                "topic": "",
-                "trend_data": [],
-                "response": "",
-            }
-        )
-
-        return {
-            "route": result["route"],
-            "response": result["response"],
-            "trend_data": result.get("trend_data", []),
-        }
-
-    except Exception as e:
-
-        error = str(e)
-
-        if (
-            "RESOURCE_EXHAUSTED" in error
-            or "429" in error
-        ):
-            raise HTTPException(
-                status_code=429,
-                detail="Gemini API quota đã hết. Vui lòng thử lại sau.",
-            )
-
-        print("\n========== AGENT ERROR ==========")
-        print(error)
-        print("=================================\n")
-
-        raise HTTPException(
-            status_code=500,
-            detail="Agent gặp lỗi khi xử lý yêu cầu.",
-        )
+app.include_router(chat_router)

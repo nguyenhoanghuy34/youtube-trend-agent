@@ -1,150 +1,168 @@
-import { Link } from "react-router-dom";
-import { Mail, Lock, User, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, UserPlus } from "lucide-react";
+
+import { registerUser } from "../api/authApi";
 
 export default function RegisterPage() {
-  function handleSubmit(e) {
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirm_password: "",
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  function handleChange(e) {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault();
 
-    // TODO: Implement authentication later
-    console.log("Register submitted");
+    setError("");
+
+    if (form.password !== form.confirm_password) {
+      setError("Mật khẩu nhập lại không khớp.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await registerUser(form);
+      navigate("/login");
+    } catch (err) {
+      setError(
+        err.response?.data?.detail || "Đăng ký thất bại."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4">
+      <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl" />
+      <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-violet-500/20 blur-3xl" />
 
-      {/* Gradient Blur Background */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-32 top-[-100px] h-96 w-96 rounded-full bg-violet-600/20 blur-3xl" />
-        <div className="absolute -right-32 top-1/3 h-96 w-96 rounded-full bg-blue-600/20 blur-3xl" />
-        <div className="absolute bottom-[-150px] left-1/3 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
-      </div>
-
-      {/* Glass Card */}
-      <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl shadow-black/30 backdrop-blur-2xl">
-
-        {/* Logo */}
-        <div className="mb-8 flex flex-col items-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/10 text-sm font-bold text-white shadow-lg">
+      <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-2xl">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-sm font-bold text-white">
             YTA
           </div>
 
-          <h1 className="text-2xl font-semibold tracking-tight text-white">
+          <h1 className="text-2xl font-bold text-white">
             Create account
           </h1>
 
           <p className="mt-2 text-sm text-slate-400">
-            Start using Youtube Trending Agent
+            Join Youtube Trending Agent
           </p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="text"
+            name="username"
+            placeholder="Username"
+            value={form.username}
+            onChange={handleChange}
+            required
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-400/50"
+          />
 
-          {/* Name */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
-              Name
-            </label>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-400/50"
+          />
 
-            <div className="relative">
-              <User
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-              />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              required
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-400/50"
+            />
 
-              <input
-                type="text"
-                placeholder="Your name"
-                className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-600 transition focus:border-white/25 focus:bg-white/10"
-              />
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-white"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
-          {/* Email */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
-              Email
-            </label>
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirm_password"
+              placeholder="Confirm password"
+              value={form.confirm_password}
+              onChange={handleChange}
+              required
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-400/50"
+            />
 
-            <div className="relative">
-              <Mail
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-              />
-
-              <input
-                type="email"
-                placeholder="you@example.com"
-                className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-600 transition focus:border-white/25 focus:bg-white/10"
-              />
-            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setShowConfirmPassword((prev) => !prev)
+              }
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-white"
+            >
+              {showConfirmPassword ? (
+                <EyeOff size={18} />
+              ) : (
+                <Eye size={18} />
+              )}
+            </button>
           </div>
 
-          {/* Password */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
-              Password
-            </label>
-
-            <div className="relative">
-              <Lock
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-              />
-
-              <input
-                type="password"
-                placeholder="Create a password"
-                className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-600 transition focus:border-white/25 focus:bg-white/10"
-              />
+          {error && (
+            <div className="rounded-xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+              {error}
             </div>
-          </div>
+          )}
 
-          {/* Confirm Password */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
-              Confirm password
-            </label>
-
-            <div className="relative">
-              <Lock
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-              />
-
-              <input
-                type="password"
-                placeholder="Confirm your password"
-                className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white outline-none placeholder:text-slate-600 transition focus:border-white/25 focus:bg-white/10"
-              />
-            </div>
-          </div>
-
-          {/* Submit */}
           <button
             type="submit"
-            className="group mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/10 py-3 text-sm font-medium text-white transition hover:bg-white/15 active:scale-[0.98]"
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Create Account
+            <UserPlus size={17} />
 
-            <ArrowRight
-              size={17}
-              className="transition-transform group-hover:translate-x-1"
-            />
+            {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
 
-        {/* Login */}
-        <p className="mt-8 text-center text-sm text-slate-400">
+        <p className="mt-6 text-center text-sm text-slate-400">
           Already have an account?{" "}
           <Link
             to="/login"
-            className="font-medium text-white transition hover:text-slate-300"
+            className="font-medium text-white hover:underline"
           >
             Sign in
           </Link>
         </p>
-
       </div>
     </div>
   );
