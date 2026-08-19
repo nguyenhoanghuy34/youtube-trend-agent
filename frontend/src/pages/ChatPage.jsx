@@ -1,56 +1,156 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import ConversationList from "../components/chat/ConversationList";
 import ChatPanel from "../components/chat/ChatPanel";
 import ReportPanel from "../components/reports/ReportPanel";
 
-export default function ChatPage({ theme = "light" }) {
-  const [videos, setVideos] = useState([]);
+import {
+  createConversation,
+  getConversations,
+  getConversation,
+} from "../api/conversationApi";
 
-  function handleVideosUpdate(newVideos) {
-    setVideos((prevVideos) => {
-      const existingIds = new Set(
-        prevVideos.map((video) => video.video_id)
+
+export default function ChatPage({ theme = "light", authUser }) {
+  const [conversations, setConversations] =
+    useState([]);
+
+  const [activeConversationId, setActiveConversationId] =
+    useState(null);
+
+  const [messages, setMessages] =
+    useState([]);
+
+  const [videos, setVideos] =
+    useState([]);
+
+
+  useEffect(() => {
+    if (authUser?.id) {
+      loadConversations(authUser.id);
+    }
+  }, [authUser?.id]);
+
+
+  async function loadConversations(userId) {
+    try {
+      const data = await getConversations(userId);
+
+      setConversations(data);
+
+      if (data.length > 0) {
+        await selectConversation(data[0].id, userId);
+      } else {
+        await handleNewChat(userId);
+      }
+
+    } catch (error) {
+      console.error(
+        "Load conversations error:",
+        error
       );
-
-      const uniqueNewVideos = newVideos.filter(
-        (video) => !existingIds.has(video.video_id)
-      );
-
-      return [...prevVideos, ...uniqueNewVideos];
-    });
+    }
   }
 
+
+  async function handleNewChat(userId = authUser?.id) {
+    try {
+      const conversation =
+        await createConversation(userId);
+
+      setConversations((prev) => [
+        conversation,
+        ...prev,
+      ]);
+
+      setActiveConversationId(
+        conversation.id
+      );
+
+      setMessages([]);
+      setVideos([]);
+
+      return conversation.id;
+
+    } catch (error) {
+      console.error(
+        "Create conversation error:",
+        error
+      );
+
+      return null;
+    }
+  }
+
+
+  async function selectConversation(id, userId = authUser?.id) {
+    try {
+      const conversation =
+        await getConversation(id, userId);
+
+      setActiveConversationId(id);
+
+      setMessages(
+        conversation.messages || []
+      );
+
+      setVideos([]);
+
+    } catch (error) {
+      console.error(
+        "Get conversation error:",
+        error
+      );
+    }
+  }
+
+
   return (
-    <div
-      className={`grid h-full min-h-0 grid-cols-2 ${
-        theme === "dark" ? "bg-slate-950" : "bg-white"
-      }`}
-    >
-      {/* Left - Chat */}
-      <div
-        className={`min-h-0 border-r ${
-          theme === "dark"
-            ? "border-slate-800 bg-slate-950"
-            : "border-slate-200 bg-white"
-        }`}
-      >
-        <ChatPanel
-          onVideosUpdate={handleVideosUpdate}
+    <div className="flex h-full min-h-0">
+
+      {/* Conversation list */}
+      <aside className="w-64 shrink-0 border-r border-slate-200 dark:border-slate-800">
+
+        <ConversationList
+          conversations={conversations}
+          activeConversationId={
+            activeConversationId
+          }
+          onNewChat={handleNewChat}
+          onSelect={selectConversation}
           theme={theme}
         />
-      </div>
 
-      {/* Right - Reports */}
-      <div
-        className={`${
-          theme === "dark" ? "bg-slate-950" : "bg-slate-50"
-        } min-h-0`}
-      >
+      </aside>
+
+
+      {/* Chat */}
+      <main className="min-w-0 flex-1">
+
+        <ChatPanel
+          conversationId={
+            activeConversationId
+          }
+          onEnsureConversation={handleNewChat}
+          messages={messages}
+          setMessages={setMessages}
+          onVideosUpdate={setVideos}
+          theme={theme}
+        />
+
+      </main>
+
+
+      {/* Intelligence Report */}
+      <aside className="w-[42%] min-w-0 border-l border-slate-200 dark:border-slate-800">
+
         <ReportPanel
           videos={videos}
           theme={theme}
         />
-      </div>
+
+      </aside>
+
     </div>
   );
 }

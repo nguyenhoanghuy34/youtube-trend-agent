@@ -25,17 +25,17 @@ export default function VideoCard({ video, theme = "light" }) {
 
         {/* Title */}
         <div>
-          <h3 className={`line-clamp-2 text-sm font-semibold leading-5 ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
+          <h3 className={`line-clamp-2 text-sm font-semibold leading-5 ${theme === "dark" ? "text-slate-50" : "text-slate-900"}`}>
             {video.title}
           </h3>
 
-          <p className={`mt-1 truncate text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+          <p className={`mt-1 truncate text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-500"}`}>
             {video.channel}
           </p>
         </div>
 
         {/* Metrics */}
-        <div className={`flex items-center gap-3 text-[11px] ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+        <div className={`flex items-center gap-3 text-[11px] ${theme === "dark" ? "text-slate-300" : "text-slate-500"}`}>
           <span>
             {Number(video.views || 0).toLocaleString()} views
           </span>
@@ -51,11 +51,11 @@ export default function VideoCard({ video, theme = "light" }) {
 
         {/* Trend Score */}
         <div className="flex items-center justify-between">
-          <span className={`text-[10px] ${theme === "dark" ? "text-slate-500" : "text-slate-400"}`}>
+          <span className={`text-[10px] ${theme === "dark" ? "text-slate-400" : "text-slate-400"}`}>
             Trend Score
           </span>
 
-          <span className={`text-xs font-semibold ${theme === "dark" ? "text-slate-200" : "text-slate-700"}`}>
+          <span className={`text-xs font-semibold ${theme === "dark" ? "text-slate-100" : "text-slate-700"}`}>
             {Number(video.trend_score || 0).toFixed(2)}
           </span>
         </div>

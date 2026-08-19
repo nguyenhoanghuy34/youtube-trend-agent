@@ -1,26 +1,57 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bot } from "lucide-react";
 
 import { sendChatMessage } from "../../api/chatApi";
 
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
-
-
 import ThinkingIndicator from "./ThinkingIndicator";
 
-export default function ChatPanel({ onVideosUpdate, theme = "light" }) {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      role: "assistant",
-      message:
-        "Hi! I’m your Trend Intelligence Agent. Ask me anything.",
-    },
-  ]);
+
+export default function ChatPanel({
+  conversationId,
+  onEnsureConversation,
+  messages: initialMessages,
+  setMessages: setParentMessages,
+  onVideosUpdate,
+  theme = "light",
+}) {
+  const [messages, setMessages] = useState(
+    initialMessages || []
+  );
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+
+  useEffect(() => {
+    setMessages(initialMessages || []);
+  }, [initialMessages]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [messages, loading]);
+
+
+  function updateMessages(updater) {
+    setMessages((prev) => {
+      const next =
+        typeof updater === "function"
+          ? updater(prev)
+          : updater;
+
+      if (setParentMessages) {
+        setParentMessages(next);
+      }
+
+      return next;
+    });
+  }
+
 
   async function handleSend() {
     const userMessage = input.trim();
@@ -30,47 +61,76 @@ export default function ChatPanel({ onVideosUpdate, theme = "light" }) {
     }
 
     setInput("");
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        role: "user",
-        message: userMessage,
-      },
-    ]);
-
     setLoading(true);
 
+    const userMessageObject = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      message: userMessage,
+    };
+
+    updateMessages((prev) => [
+      ...prev,
+      userMessageObject,
+    ]);
+
+    let targetConversationId = conversationId;
+
+    if (!targetConversationId && onEnsureConversation) {
+      try {
+        targetConversationId = await onEnsureConversation();
+      } catch (error) {
+        console.error("Create chat error:", error);
+      }
+    }
+
+    if (!targetConversationId) {
+      updateMessages((prev) =>
+        prev.filter((message) => message.id !== userMessageObject.id)
+      );
+      setInput(userMessage);
+      setLoading(false);
+      return;
+    }
+
     try {
-      const data = await sendChatMessage(userMessage);
+      const data = await sendChatMessage(
+        targetConversationId,
+        userMessage
+      );
 
-      // Update Report panel
-if (data.trend_data && onVideosUpdate) {
-  const sortedVideos = [...data.trend_data].sort(
-    (a, b) => a.rank - b.rank
-  );
+      if (
+        data.trend_data &&
+        onVideosUpdate
+      ) {
+        const sortedVideos = [
+          ...data.trend_data,
+        ].sort(
+          (a, b) => a.rank - b.rank
+        );
 
-  onVideosUpdate(sortedVideos);
-}
+        onVideosUpdate(sortedVideos);
+      }
 
-      // Update Chat
-      setMessages((prev) => [
+      updateMessages((prev) => [
         ...prev,
         {
-          id: Date.now() + 1,
+          id: `assistant-${Date.now()}`,
           role: "assistant",
           message: data.response,
         },
       ]);
 
     } catch (error) {
-      console.error("Chat API error:", error);
+      console.error(
+        "Chat API error:",
+        error
+      );
 
-      setMessages((prev) => [
+      updateMessages((prev) => [
         ...prev,
         {
-          id: Date.now() + 1,
+          id: `error-${Date.now()}`,
           role: "assistant",
           message:
             "Sorry, I couldn't connect to the agent.",
@@ -82,29 +142,55 @@ if (data.trend_data && onVideosUpdate) {
     }
   }
 
+
   return (
     <section className="flex h-full min-h-0 flex-col">
 
       {/* Header */}
-      <div className={`border-b px-5 py-4 ${theme === "dark" ? "border-slate-800" : "border-slate-200"}`}>
+      <div
+        className={`border-b px-5 py-4 ${
+          theme === "dark"
+            ? "border-slate-800"
+            : "border-slate-200"
+        }`}
+      >
         <div className="flex items-center gap-3">
 
-          <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${theme === "dark" ? "bg-slate-800" : "bg-slate-100"}`}>
+          <div
+            className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+              theme === "dark"
+                ? "bg-slate-800"
+                : "bg-slate-100"
+            }`}
+          >
             <Bot size={18} />
           </div>
 
           <div>
-            <h2 className={`text-sm font-semibold ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
+            <h2
+              className={`text-sm font-semibold ${
+                theme === "dark"
+                  ? "text-slate-100"
+                  : "text-slate-900"
+              }`}
+            >
               AI Agent
             </h2>
 
-            <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+            <p
+              className={`text-xs ${
+                theme === "dark"
+                  ? "text-slate-400"
+                  : "text-slate-500"
+              }`}
+            >
               Ask about trends and marketing
             </p>
           </div>
 
         </div>
       </div>
+
 
       {/* Messages */}
       <div className="flex-1 space-y-4 overflow-y-auto p-5">
@@ -113,19 +199,31 @@ if (data.trend_data && onVideosUpdate) {
           <ChatMessage
             key={message.id}
             role={message.role}
-            message={message.message}
+            message={message.message || message.content}
             theme={theme}
           />
         ))}
 
-{loading && (
-  <ThinkingIndicator variant="ring" theme={theme} />
-)}
+        {loading && (
+          <ThinkingIndicator
+            variant="ring"
+            theme={theme}
+          />
+        )}
+
+        <div ref={messagesEndRef} />
 
       </div>
 
+
       {/* Input */}
-      <div className={`border-t p-4 ${theme === "dark" ? "border-slate-800" : "border-slate-200"}`}>
+      <div
+        className={`border-t p-4 ${
+          theme === "dark"
+            ? "border-slate-800"
+            : "border-slate-200"
+        }`}
+      >
         <ChatInput
           value={input}
           onChange={setInput}

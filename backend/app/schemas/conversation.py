@@ -1,6 +1,4 @@
 from datetime import datetime
-from uuid import UUID
-
 from pydantic import BaseModel, ConfigDict
 
 
@@ -10,8 +8,8 @@ class MessageCreate(BaseModel):
 
 
 class MessageResponse(BaseModel):
-    id: UUID
-    conversation_id: UUID
+    id: int
+    conversation_id: int
     role: str
     content: str
     created_at: datetime
@@ -23,11 +21,13 @@ class MessageResponse(BaseModel):
 
 class ConversationCreate(BaseModel):
     title: str = "New Conversation"
+    user_id: int | None = None
 
 
 class ConversationResponse(BaseModel):
-    id: UUID
+    id: int
     title: str
+    user_id: int | None = None
     created_at: datetime
     updated_at: datetime
 

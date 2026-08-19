@@ -389,13 +389,16 @@ def topic_trend_node(
 # Build LangGraph
 # =========================================================
 
-def build_graph():
+def build_graph(checkpointer=None):
 
     graph = StateGraph(
         AgentState
     )
 
+    # =====================================================
     # Nodes
+    # =====================================================
+
     graph.add_node(
         "router",
         router_node,
@@ -426,13 +429,19 @@ def build_graph():
         rising_trend_node,
     )
 
+    # =====================================================
     # START
+    # =====================================================
+
     graph.add_edge(
         START,
         "router",
     )
 
+    # =====================================================
     # Router
+    # =====================================================
+
     graph.add_conditional_edges(
         "router",
         route_after_router,
@@ -444,13 +453,19 @@ def build_graph():
         },
     )
 
+    # =====================================================
     # Topic
+    # =====================================================
+
     graph.add_edge(
         "extract_topic",
         "topic_trend",
     )
 
-    # End
+    # =====================================================
+    # END
+    # =====================================================
+
     graph.add_edge(
         "model",
         END,
@@ -471,11 +486,11 @@ def build_graph():
         END,
     )
 
-    return graph.compile()
+    # =====================================================
+    # Compile with LangGraph persistence
+    # =====================================================
 
+    return graph.compile(
+        checkpointer=checkpointer
+    )
 
-# =========================================================
-# Compiled Agent
-# =========================================================
-
-agent_graph = build_graph()

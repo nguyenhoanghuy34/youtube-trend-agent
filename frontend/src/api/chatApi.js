@@ -1,7 +1,11 @@
-import apiClient from "./client";
+import client from "./client";
 
-export async function sendChatMessage(message) {
-  const response = await apiClient.post("/chat", {
+export async function sendChatMessage(
+  conversationId,
+  message
+) {
+  const response = await client.post("/chat", {
+    conversation_id: conversationId,
     message,
   });
 

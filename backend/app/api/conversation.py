@@ -1,4 +1,4 @@
-from uuid import UUID
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -30,6 +30,7 @@ def create_conversation(
 ):
     conversation = Conversation(
         title=data.title,
+        user_id=data.user_id,
     )
 
     db.add(conversation)
@@ -44,13 +45,15 @@ def create_conversation(
     response_model=list[ConversationResponse],
 )
 def get_conversations(
+    user_id: int | None = None,
     db: Session = Depends(get_db),
 ):
-    return (
-        db.query(Conversation)
-        .order_by(Conversation.updated_at.desc())
-        .all()
-    )
+    query = db.query(Conversation)
+
+    if user_id is not None:
+        query = query.filter(Conversation.user_id == user_id)
+
+    return query.order_by(Conversation.updated_at.desc()).all()
 
 
 @router.get(
@@ -58,7 +61,8 @@ def get_conversations(
     response_model=ConversationDetailResponse,
 )
 def get_conversation(
-    conversation_id: UUID,
+    conversation_id: int,
+    user_id: int | None = None,
     db: Session = Depends(get_db),
 ):
     conversation = (
@@ -75,6 +79,12 @@ def get_conversation(
             detail="Conversation not found",
         )
 
+    if user_id is not None and conversation.user_id != user_id:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversation not found",
+        )
+
     return conversation
 
 
@@ -83,7 +93,7 @@ def get_conversation(
     response_model=MessageResponse,
 )
 def create_message(
-    conversation_id: UUID,
+    conversation_id: int,
     data: MessageCreate,
     db: Session = Depends(get_db),
 ):
@@ -108,8 +118,7 @@ def create_message(
     )
 
     db.add(message)
-
-    conversation.updated_at = message.created_at
+    conversation.updated_at = datetime.now(timezone.utc)
 
     db.commit()
     db.refresh(message)
