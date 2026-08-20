@@ -61,8 +61,8 @@ const hotNews = [
     title: "New AI Scholarships Open for International Students",
     description:
       "Several universities announce new scholarship opportunities for students interested in AI research.",
-    image:
-      "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=85",
+image:
+  "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85",
   },
 ];
 
