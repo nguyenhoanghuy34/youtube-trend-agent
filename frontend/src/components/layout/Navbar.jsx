@@ -57,19 +57,23 @@ export default function Navbar({ theme, onThemeChange, onLogout }) {
     >
       <div className="flex h-16 items-center justify-between px-6">
 
-        {/* Logo */}
-        <NavLink
-          to="/"
-          className="flex items-center gap-3"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
-            YTA
-          </div>
+{/* Logo */}
+<NavLink
+  to="/"
+  className="flex items-center gap-3"
+>
+  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white">
+    BYT
+  </div>
 
-          <span className={`text-lg font-bold tracking-tight ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
-            Youtube Trending Agent
-          </span>
-        </NavLink>
+  <span
+    className={`text-lg font-bold tracking-tight ${
+      theme === "dark" ? "text-white" : "text-slate-900"
+    }`}
+  >
+    BeyouTu Trending Agent
+  </span>
+</NavLink>
 
         {/* Right side */}
         <div className="flex items-center gap-3">

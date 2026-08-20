@@ -11,7 +11,7 @@ export default function ReportPanel({ videos = [], theme = "light" }) {
         </h2>
 
         <p className={`text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-500"}`}>
-          Current YouTube trending videos
+          Current BeyouTu trending videos
         </p>
       </div>
 
@@ -21,7 +21,7 @@ export default function ReportPanel({ videos = [], theme = "light" }) {
         {videos.length === 0 ? (
           <div className="flex h-full items-center justify-center">
             <p className={`text-sm ${theme === "dark" ? "text-slate-300" : "text-slate-400"}`}>
-              Ask the agent about YouTube trends to generate a report.
+              Ask the agent about BeyouTu trends to generate a report.
             </p>
           </div>
         ) : (
