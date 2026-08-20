@@ -6,7 +6,7 @@ import {
   Search,
   BrainCircuit,
   Zap,
-  Youtube,
+  Play,
   ArrowRight,
   Sparkles,
 } from "lucide-react";
@@ -80,7 +80,7 @@ export default function AboutPage({ theme = "dark" }) {
           <div className="relative mx-auto max-w-4xl">
             {/* Logo */}
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-red-400/20 bg-red-500/10 shadow-lg shadow-red-950/20">
-              <Youtube size={30} className="text-red-500" />
+<Play size={30} fill="currentColor" className="ml-1 text-red-500" />
             </div>
 
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-300">
