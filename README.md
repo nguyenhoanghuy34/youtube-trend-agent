@@ -14,7 +14,7 @@
 ## 🖥️ Web Layout
 
 <p align="center">
-  <img src="assets/images/web_layout.png" width="750" alt="YouTube Trend Agent Web Layout">
+  <img src="assets/images/web_layout2.png" width="750" alt="YouTube Trend Agent Web Layout">
 </p>
 
 ---
@@ -53,3 +53,4 @@ YouTube API   AI Agent
         ┌─────┴─────┐
         ▼           ▼
     LangChain    Gemini
+```
