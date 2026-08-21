@@ -22,13 +22,22 @@ export default function ChatPanel({
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+
   const messagesEndRef = useRef(null);
 
+
+  // =========================================================
+  // Sync messages with parent
+  // =========================================================
 
   useEffect(() => {
     setMessages(initialMessages || []);
   }, [initialMessages]);
 
+
+  // =========================================================
+  // Auto scroll
+  // =========================================================
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -37,6 +46,10 @@ export default function ChatPanel({
     });
   }, [messages, loading]);
 
+
+  // =========================================================
+  // Update messages
+  // =========================================================
 
   function updateMessages(updater) {
     setMessages((prev) => {
@@ -54,6 +67,10 @@ export default function ChatPanel({
   }
 
 
+  // =========================================================
+  // Send message
+  // =========================================================
+
   async function handleSend() {
     const userMessage = input.trim();
 
@@ -63,6 +80,11 @@ export default function ChatPanel({
 
     setInput("");
     setLoading(true);
+
+
+    // =======================================================
+    // Add user message immediately
+    // =======================================================
 
     const userMessageObject = {
       id: `user-${Date.now()}`,
@@ -75,6 +97,11 @@ export default function ChatPanel({
       userMessageObject,
     ]);
 
+
+    // =======================================================
+    // Ensure conversation
+    // =======================================================
+
     let targetConversationId =
       conversationId;
 
@@ -85,6 +112,7 @@ export default function ChatPanel({
       try {
         targetConversationId =
           await onEnsureConversation();
+
       } catch (error) {
         console.error(
           "Create chat error:",
@@ -92,6 +120,11 @@ export default function ChatPanel({
         );
       }
     }
+
+
+    // =======================================================
+    // Conversation creation failed
+    // =======================================================
 
     if (!targetConversationId) {
       updateMessages((prev) =>
@@ -108,12 +141,27 @@ export default function ChatPanel({
       return;
     }
 
+
+    // =======================================================
+    // Call backend
+    // =======================================================
+
     try {
       const data =
         await sendChatMessage(
           targetConversationId,
           userMessage
         );
+
+
+      // =====================================================
+      // Intelligence Output
+      //
+      // IMPORTANT:
+      // - summary = short Gemini summary
+      // - response = full Gemini response for Chat
+      // - trend_data = videos
+      // =====================================================
 
       if (
         onReportUpdate &&
@@ -123,22 +171,28 @@ export default function ChatPanel({
           ...data.trend_data,
         ].sort(
           (a, b) =>
-            a.rank - b.rank
+            (a.rank || 0) -
+            (b.rank || 0)
         );
 
         onReportUpdate({
           summary:
-            data.response || "",
+            data.summary || "",
           videos: sortedVideos,
         });
       }
+
+
+      // =====================================================
+      // Add full assistant response to Chat
+      // =====================================================
 
       updateMessages((prev) => [
         ...prev,
         {
           id: `assistant-${Date.now()}`,
           role: "assistant",
-          message: data.response,
+          message: data.response || "",
         },
       ]);
 
@@ -147,6 +201,11 @@ export default function ChatPanel({
         "Chat API error:",
         error
       );
+
+
+      // =====================================================
+      // Error message
+      // =====================================================
 
       updateMessages((prev) => [
         ...prev,
@@ -164,10 +223,17 @@ export default function ChatPanel({
   }
 
 
+  // =========================================================
+  // Render
+  // =========================================================
+
   return (
     <section className="flex h-full min-h-0 flex-col">
 
-      {/* Header */}
+
+      {/* =====================================================
+          Header
+          ===================================================== */}
 
       <div
         className={`border-b px-5 py-4 ${
@@ -178,6 +244,9 @@ export default function ChatPanel({
       >
         <div className="flex items-center gap-3">
 
+
+          {/* Bot Icon */}
+
           <div
             className={`flex h-9 w-9 items-center justify-center rounded-lg ${
               theme === "dark"
@@ -187,6 +256,9 @@ export default function ChatPanel({
           >
             <Bot size={18} />
           </div>
+
+
+          {/* Title */}
 
           <div>
             <h2
@@ -214,7 +286,9 @@ export default function ChatPanel({
       </div>
 
 
-      {/* Messages */}
+      {/* =====================================================
+          Messages
+          ===================================================== */}
 
       <div className="flex-1 space-y-4 overflow-y-auto p-5">
 
@@ -230,6 +304,9 @@ export default function ChatPanel({
           />
         ))}
 
+
+        {/* Thinking */}
+
         {loading && (
           <ThinkingIndicator
             variant="ring"
@@ -237,12 +314,17 @@ export default function ChatPanel({
           />
         )}
 
+
+        {/* Scroll anchor */}
+
         <div ref={messagesEndRef} />
 
       </div>
 
 
-      {/* Input */}
+      {/* =====================================================
+          Input
+          ===================================================== */}
 
       <div
         className={`border-t p-4 ${
