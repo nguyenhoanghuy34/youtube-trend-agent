@@ -13,6 +13,15 @@ from app.schemas.conversation import (
     MessageResponse,
 )
 
+from app.schemas.conversation import (
+    ConversationCreate,
+    ConversationUpdate,
+    ConversationDetailResponse,
+    ConversationResponse,
+    MessageCreate,
+    MessageResponse,
+)
+
 
 router = APIRouter(
     prefix="/conversations",
@@ -34,6 +43,47 @@ def create_conversation(
     )
 
     db.add(conversation)
+    db.commit()
+    db.refresh(conversation)
+
+    return conversation
+
+
+@router.patch(
+    "/{conversation_id}",
+    response_model=ConversationResponse,
+)
+def update_conversation(
+    conversation_id: int,
+    data: ConversationUpdate,
+    db: Session = Depends(get_db),
+):
+    conversation = (
+        db.query(Conversation)
+        .filter(
+            Conversation.id == conversation_id,
+            Conversation.user_id == data.user_id,
+        )
+        .first()
+    )
+
+    if not conversation:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversation not found",
+        )
+
+    title = data.title.strip()
+
+    if not title:
+        raise HTTPException(
+            status_code=400,
+            detail="Conversation title cannot be empty",
+        )
+
+    conversation.title = title
+    conversation.updated_at = datetime.now(timezone.utc)
+
     db.commit()
     db.refresh(conversation)
 

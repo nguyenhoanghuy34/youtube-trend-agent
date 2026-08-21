@@ -19,7 +19,7 @@ from app.analysis.trend_scorer import (
 )
 
 from app.services.youtube_service import (
-    get_top_10_trending_videos,
+    get_top_trending_videos,
     search_youtube_videos,
     format_trending_videos,
     format_search_videos,
@@ -28,7 +28,7 @@ from app.services.youtube_service import (
 from app.config.settings import settings
 
 from app.agent.intent_router import (
-    normalize_route,
+    parse_router_result,
     route_after_router,
 )
 
@@ -101,7 +101,7 @@ def router_node(
         }
     )
 
-    route = normalize_route(
+    route, top_n = parse_router_result(
         get_text_content(result)
     )
 
@@ -114,15 +114,26 @@ def router_node(
         f"[Router] → {route}"
     )
 
+    print(
+        f"[Router] → top_n={top_n}"
+    )
+
     return {
         **state,
         "route": route,
+        "top_n": top_n,
     }
 
+
+# =========================================================
+# Rising Trend
+# =========================================================
 
 def rising_trend_node(
     state: AgentState,
 ) -> AgentState:
+
+    top_n = state["top_n"]
 
     print(
         "[Rising Trend] "
@@ -130,7 +141,7 @@ def rising_trend_node(
     )
 
     trends = get_rising_trends(
-        top_n=10
+        top_n=top_n
     )
 
     if not trends:
@@ -146,7 +157,7 @@ def rising_trend_node(
         }
 
     lines = [
-        "Các trend/video đang tăng mạnh:",
+        f"Top {len(trends)} rising trends:",
         "",
     ]
 
@@ -188,6 +199,7 @@ def rising_trend_node(
         "response": "\n".join(lines),
     }
 
+
 # =========================================================
 # Model
 # =========================================================
@@ -210,14 +222,17 @@ def youtube_node(
     state: AgentState,
 ) -> AgentState:
 
+    top_n = state["top_n"]
+
     print(
         "[YouTube] "
         "Fetching general trends..."
     )
 
-    # 1. Get current trending videos
-    videos = get_top_10_trending_videos(
-        region_code="VN"
+    # 1. Get requested number of trending videos
+    videos = get_top_trending_videos(
+        region_code="VN",
+        max_results=top_n,
     )
 
     print(
@@ -330,6 +345,7 @@ def topic_trend_node(
 ) -> AgentState:
 
     topic = state["topic"]
+    top_n = state["top_n"]
 
     print(
         f"[YouTube] "
@@ -339,7 +355,7 @@ def topic_trend_node(
     videos = search_youtube_videos(
         query=topic,
         region_code="VN",
-        max_results=10,
+        max_results=top_n,
     )
 
     print(
@@ -493,4 +509,3 @@ def build_graph(checkpointer=None):
     return graph.compile(
         checkpointer=checkpointer
     )
-

@@ -29,6 +29,7 @@ export default function ChatPanel({
     setMessages(initialMessages || []);
   }, [initialMessages]);
 
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -74,42 +75,61 @@ export default function ChatPanel({
       userMessageObject,
     ]);
 
-    let targetConversationId = conversationId;
+    let targetConversationId =
+      conversationId;
 
-    if (!targetConversationId && onEnsureConversation) {
+    if (
+      !targetConversationId &&
+      onEnsureConversation
+    ) {
       try {
-        targetConversationId = await onEnsureConversation();
+        targetConversationId =
+          await onEnsureConversation();
       } catch (error) {
-        console.error("Create chat error:", error);
+        console.error(
+          "Create chat error:",
+          error
+        );
       }
     }
 
     if (!targetConversationId) {
       updateMessages((prev) =>
-        prev.filter((message) => message.id !== userMessageObject.id)
+        prev.filter(
+          (message) =>
+            message.id !==
+            userMessageObject.id
+        )
       );
+
       setInput(userMessage);
       setLoading(false);
+
       return;
     }
 
     try {
-      const data = await sendChatMessage(
-        targetConversationId,
-        userMessage
-      );
+      const data =
+        await sendChatMessage(
+          targetConversationId,
+          userMessage
+        );
 
       if (
-        data.trend_data &&
+        Array.isArray(data.trend_data) &&
         onVideosUpdate
       ) {
         const sortedVideos = [
           ...data.trend_data,
-        ].sort(
-          (a, b) => a.rank - b.rank
-        );
+        ]
+          .sort(
+            (a, b) =>
+              a.rank - b.rank
+          );
 
-        onVideosUpdate(sortedVideos);
+        onVideosUpdate(
+          sortedVideos
+        );
       }
 
       updateMessages((prev) => [
@@ -199,7 +219,10 @@ export default function ChatPanel({
           <ChatMessage
             key={message.id}
             role={message.role}
-            message={message.message || message.content}
+            message={
+              message.message ||
+              message.content
+            }
             theme={theme}
           />
         ))}

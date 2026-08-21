@@ -29,7 +29,10 @@ def chat(
     try:
         conversation = (
             db.query(Conversation)
-            .filter(Conversation.id == request.conversation_id)
+            .filter(
+                Conversation.id
+                == request.conversation_id
+            )
             .first()
         )
 
@@ -44,21 +47,31 @@ def chat(
             role="user",
             content=request.message,
         )
+
         db.add(user_message)
         db.commit()
 
-        agent_graph = http_request.app.state.agent_graph
+        agent_graph = (
+            http_request
+            .app
+            .state
+            .agent_graph
+        )
 
         config = {
             "configurable": {
-                "thread_id": str(request.conversation_id),
+                "thread_id": str(
+                    request.conversation_id
+                ),
             }
         }
 
         result = agent_graph.invoke(
             {
-                "user_message": request.message,
+                "user_message":
+                    request.message,
                 "route": "",
+                "top_n": 10,
                 "topic": "",
                 "trend_data": [],
                 "response": "",
@@ -67,14 +80,23 @@ def chat(
             config=config,
         )
 
-        assistant_message_text = result.get("response", "")
+        assistant_message_text = result.get(
+            "response",
+            "",
+        )
+
         assistant_message = Message(
             conversation_id=conversation.id,
             role="assistant",
             content=assistant_message_text,
         )
+
         db.add(assistant_message)
-        conversation.updated_at = datetime.now(timezone.utc)
+
+        conversation.updated_at = (
+            datetime.now(timezone.utc)
+        )
+
         db.commit()
 
         return {
@@ -83,10 +105,15 @@ def chat(
                 "trend_data",
                 [],
             ),
+            "top_n": result.get(
+                "top_n",
+                10,
+            ),
         }
 
     except HTTPException:
         raise
+
     except Exception as exc:
         raise HTTPException(
             status_code=500,

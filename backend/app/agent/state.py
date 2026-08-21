@@ -7,6 +7,7 @@ from langgraph.graph.message import add_messages
 class AgentState(TypedDict):
     user_message: str
     route: str
+    top_n: int
     topic: str
     trend_data: list
     response: str

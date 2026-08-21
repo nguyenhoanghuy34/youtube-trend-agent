@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -22,6 +23,11 @@ class MessageResponse(BaseModel):
 class ConversationCreate(BaseModel):
     title: str = "New Conversation"
     user_id: int | None = None
+
+
+class ConversationUpdate(BaseModel):
+    title: str
+    user_id: int
 
 
 class ConversationResponse(BaseModel):

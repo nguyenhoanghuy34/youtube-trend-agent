@@ -11,10 +11,16 @@ def get_youtube_client():
     )
 
 
-def get_top_10_trending_videos(
+def get_top_trending_videos(
     region_code: str = "VN",
+    max_results: int = 10,
 ):
     youtube = get_youtube_client()
+
+    max_results = max(
+        1,
+        min(int(max_results), 50),
+    )
 
     response = (
         youtube.videos()
@@ -22,7 +28,7 @@ def get_top_10_trending_videos(
             part="snippet,statistics,contentDetails",
             chart="mostPopular",
             regionCode=region_code,
-            maxResults=10,
+            maxResults=max_results,
         )
         .execute()
     )
@@ -96,7 +102,7 @@ def format_trending_videos(
 ) -> str:
 
     lines = [
-        "Top 10 YouTube Trending tại Việt Nam:",
+        f"Top {len(videos)} YouTube Trending tại Việt Nam:",
         "",
     ]
 
@@ -130,12 +136,18 @@ def format_trending_videos(
 
     return "\n".join(lines)
 
+
 def search_youtube_videos(
     query: str,
     region_code: str = "VN",
     max_results: int = 10,
 ):
     youtube = get_youtube_client()
+
+    max_results = max(
+        1,
+        min(int(max_results), 50),
+    )
 
     response = (
         youtube.search()
@@ -197,6 +209,9 @@ def search_youtube_videos(
                 ),
                 "published_at": snippet.get(
                     "publishedAt"
+                ),
+                "category_id": snippet.get(
+                    "categoryId"
                 ),
                 "duration": content_details.get(
                     "duration"
@@ -274,7 +289,7 @@ def format_search_videos(
 
 if __name__ == "__main__":
 
-    videos = get_top_10_trending_videos()
+    videos = get_top_trending_videos()
 
     print(
         format_trending_videos(videos)
