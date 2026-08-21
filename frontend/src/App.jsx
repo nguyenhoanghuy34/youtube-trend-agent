@@ -83,7 +83,13 @@ export default function App() {
                 <Routes>
                   <Route
                     path="/"
-                    element={<ChatPage theme={theme} authUser={authUser} />}
+                    element={
+                      <ChatPage
+                        key={authUser.id}
+                        theme={theme}
+                        authUser={authUser}
+                      />
+                    }
                   />
 
                   <Route

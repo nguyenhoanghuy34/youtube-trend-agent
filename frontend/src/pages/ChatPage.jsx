@@ -8,10 +8,14 @@ import {
   createConversation,
   getConversations,
   getConversation,
+  updateConversation,
 } from "../api/conversationApi";
 
 
-export default function ChatPage({ theme = "light", authUser }) {
+export default function ChatPage({
+  theme = "light",
+  authUser,
+}) {
   const [conversations, setConversations] =
     useState([]);
 
@@ -25,21 +29,50 @@ export default function ChatPage({ theme = "light", authUser }) {
     useState([]);
 
 
+  // =========================================================
+  // Load conversations when authenticated user changes
+  // =========================================================
+
   useEffect(() => {
-    if (authUser?.id) {
-      loadConversations(authUser.id);
+    if (!authUser?.id) {
+      setConversations([]);
+      setActiveConversationId(null);
+      setMessages([]);
+      setVideos([]);
+
+      return;
     }
+
+    loadConversations(authUser.id);
   }, [authUser?.id]);
 
 
+  // =========================================================
+  // Load user's conversations
+  // =========================================================
+
   async function loadConversations(userId) {
     try {
-      const data = await getConversations(userId);
+      const data =
+        await getConversations(userId);
 
-      setConversations(data);
+      // Only keep conversations belonging
+      // to the authenticated user.
+      const userConversations =
+        data.filter(
+          (conversation) =>
+            conversation.user_id === userId
+        );
 
-      if (data.length > 0) {
-        await selectConversation(data[0].id, userId);
+      setConversations(
+        userConversations
+      );
+
+      if (userConversations.length > 0) {
+        await selectConversation(
+          userConversations[0].id,
+          userId
+        );
       } else {
         await handleNewChat(userId);
       }
@@ -49,11 +82,30 @@ export default function ChatPage({ theme = "light", authUser }) {
         "Load conversations error:",
         error
       );
+
+      setConversations([]);
+      setActiveConversationId(null);
+      setMessages([]);
+      setVideos([]);
     }
   }
 
 
-  async function handleNewChat(userId = authUser?.id) {
+  // =========================================================
+  // Create new conversation
+  // =========================================================
+
+  async function handleNewChat(
+    userId = authUser?.id
+  ) {
+    if (!userId) {
+      console.error(
+        "Cannot create conversation: user not found"
+      );
+
+      return null;
+    }
+
     try {
       const conversation =
         await createConversation(userId);
@@ -83,12 +135,39 @@ export default function ChatPage({ theme = "light", authUser }) {
   }
 
 
-  async function selectConversation(id, userId = authUser?.id) {
+  // =========================================================
+  // Select conversation
+  // =========================================================
+
+  async function selectConversation(
+    conversationId,
+    userId = authUser?.id
+  ) {
+    if (!userId || !conversationId) {
+      return;
+    }
+
     try {
       const conversation =
-        await getConversation(id, userId);
+        await getConversation(
+          conversationId,
+          userId
+        );
 
-      setActiveConversationId(id);
+      // Extra frontend ownership check.
+      if (
+        conversation.user_id !== userId
+      ) {
+        console.error(
+          "Conversation does not belong to current user"
+        );
+
+        return;
+      }
+
+      setActiveConversationId(
+        conversation.id
+      );
 
       setMessages(
         conversation.messages || []
@@ -105,10 +184,88 @@ export default function ChatPage({ theme = "light", authUser }) {
   }
 
 
+  // =========================================================
+  // Rename conversation
+  // =========================================================
+
+  async function handleRenameConversation(
+    conversationId,
+    newTitle
+  ) {
+    const userId = authUser?.id;
+
+    if (!userId) {
+      throw new Error(
+        "Authenticated user not found"
+      );
+    }
+
+    if (!conversationId) {
+      throw new Error(
+        "Conversation ID is required"
+      );
+    }
+
+    const title =
+      newTitle.trim();
+
+    if (!title) {
+      throw new Error(
+        "Conversation title cannot be empty"
+      );
+    }
+
+
+    // Make sure this conversation
+    // belongs to the current user's list.
+    const conversation =
+      conversations.find(
+        (item) =>
+          item.id === conversationId
+      );
+
+    if (!conversation) {
+      throw new Error(
+        "Conversation does not belong to current user"
+      );
+    }
+
+
+    // Backend performs the final
+    // ownership validation.
+    const updatedConversation =
+      await updateConversation(
+        conversationId,
+        userId,
+        title
+      );
+
+
+    // Update ONLY the matching conversation.
+    setConversations((prev) =>
+      prev.map((item) =>
+        item.id === conversationId
+          ? {
+              ...item,
+              ...updatedConversation,
+            }
+          : item
+      )
+    );
+  }
+
+
+  // =========================================================
+  // Render
+  // =========================================================
+
   return (
     <div className="flex h-full min-h-0">
 
-      {/* Conversation list */}
+      {/* =====================================================
+          Conversation List
+          ===================================================== */}
+
       <aside className="w-64 shrink-0 border-r border-slate-200 dark:border-slate-800">
 
         <ConversationList
@@ -118,20 +275,28 @@ export default function ChatPage({ theme = "light", authUser }) {
           }
           onNewChat={handleNewChat}
           onSelect={selectConversation}
+          onRename={
+            handleRenameConversation
+          }
           theme={theme}
         />
 
       </aside>
 
 
-      {/* Chat */}
+      {/* =====================================================
+          Chat
+          ===================================================== */}
+
       <main className="min-w-0 flex-1">
 
         <ChatPanel
           conversationId={
             activeConversationId
           }
-          onEnsureConversation={handleNewChat}
+          onEnsureConversation={
+            handleNewChat
+          }
           messages={messages}
           setMessages={setMessages}
           onVideosUpdate={setVideos}
@@ -141,7 +306,10 @@ export default function ChatPage({ theme = "light", authUser }) {
       </main>
 
 
-      {/* Intelligence Report */}
+      {/* =====================================================
+          Intelligence Report
+          ===================================================== */}
+
       <aside className="w-[42%] min-w-0 border-l border-slate-200 dark:border-slate-800">
 
         <ReportPanel
