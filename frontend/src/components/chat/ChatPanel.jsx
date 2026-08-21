@@ -13,7 +13,7 @@ export default function ChatPanel({
   onEnsureConversation,
   messages: initialMessages,
   setMessages: setParentMessages,
-  onVideosUpdate,
+  onReportUpdate,
   theme = "light",
 }) {
   const [messages, setMessages] = useState(
@@ -116,20 +116,21 @@ export default function ChatPanel({
         );
 
       if (
-        Array.isArray(data.trend_data) &&
-        onVideosUpdate
+        onReportUpdate &&
+        Array.isArray(data.trend_data)
       ) {
         const sortedVideos = [
           ...data.trend_data,
-        ]
-          .sort(
-            (a, b) =>
-              a.rank - b.rank
-          );
-
-        onVideosUpdate(
-          sortedVideos
+        ].sort(
+          (a, b) =>
+            a.rank - b.rank
         );
+
+        onReportUpdate({
+          summary:
+            data.response || "",
+          videos: sortedVideos,
+        });
       }
 
       updateMessages((prev) => [
@@ -167,6 +168,7 @@ export default function ChatPanel({
     <section className="flex h-full min-h-0 flex-col">
 
       {/* Header */}
+
       <div
         className={`border-b px-5 py-4 ${
           theme === "dark"
@@ -213,6 +215,7 @@ export default function ChatPanel({
 
 
       {/* Messages */}
+
       <div className="flex-1 space-y-4 overflow-y-auto p-5">
 
         {messages.map((message) => (
@@ -240,6 +243,7 @@ export default function ChatPanel({
 
 
       {/* Input */}
+
       <div
         className={`border-t p-4 ${
           theme === "dark"

@@ -25,7 +25,7 @@ export default function ChatPage({
   const [messages, setMessages] =
     useState([]);
 
-  const [videos, setVideos] =
+  const [reports, setReports] =
     useState([]);
 
 
@@ -38,7 +38,7 @@ export default function ChatPage({
       setConversations([]);
       setActiveConversationId(null);
       setMessages([]);
-      setVideos([]);
+      setReports([]);
 
       return;
     }
@@ -56,8 +56,6 @@ export default function ChatPage({
       const data =
         await getConversations(userId);
 
-      // Only keep conversations belonging
-      // to the authenticated user.
       const userConversations =
         data.filter(
           (conversation) =>
@@ -86,7 +84,7 @@ export default function ChatPage({
       setConversations([]);
       setActiveConversationId(null);
       setMessages([]);
-      setVideos([]);
+      setReports([]);
     }
   }
 
@@ -120,7 +118,7 @@ export default function ChatPage({
       );
 
       setMessages([]);
-      setVideos([]);
+      setReports([]);
 
       return conversation.id;
 
@@ -154,7 +152,6 @@ export default function ChatPage({
           userId
         );
 
-      // Extra frontend ownership check.
       if (
         conversation.user_id !== userId
       ) {
@@ -173,7 +170,9 @@ export default function ChatPage({
         conversation.messages || []
       );
 
-      setVideos([]);
+      // Reports are generated during
+      // the current frontend session.
+      setReports([]);
 
     } catch (error) {
       console.error(
@@ -181,6 +180,28 @@ export default function ChatPage({
         error
       );
     }
+  }
+
+
+  // =========================================================
+  // Add new intelligence report
+  // =========================================================
+
+  function handleReportUpdate(
+    report
+  ) {
+    if (!report) {
+      return;
+    }
+
+    setReports((prev) => [
+      ...prev,
+      {
+        id: `report-${Date.now()}`,
+        summary: report.summary || "",
+        videos: report.videos || [],
+      },
+    ]);
   }
 
 
@@ -215,9 +236,6 @@ export default function ChatPage({
       );
     }
 
-
-    // Make sure this conversation
-    // belongs to the current user's list.
     const conversation =
       conversations.find(
         (item) =>
@@ -230,9 +248,6 @@ export default function ChatPage({
       );
     }
 
-
-    // Backend performs the final
-    // ownership validation.
     const updatedConversation =
       await updateConversation(
         conversationId,
@@ -240,8 +255,6 @@ export default function ChatPage({
         title
       );
 
-
-    // Update ONLY the matching conversation.
     setConversations((prev) =>
       prev.map((item) =>
         item.id === conversationId
@@ -262,9 +275,7 @@ export default function ChatPage({
   return (
     <div className="flex h-full min-h-0">
 
-      {/* =====================================================
-          Conversation List
-          ===================================================== */}
+      {/* Conversation List */}
 
       <aside className="w-64 shrink-0 border-r border-slate-200 dark:border-slate-800">
 
@@ -284,9 +295,7 @@ export default function ChatPage({
       </aside>
 
 
-      {/* =====================================================
-          Chat
-          ===================================================== */}
+      {/* Chat */}
 
       <main className="min-w-0 flex-1">
 
@@ -299,21 +308,21 @@ export default function ChatPage({
           }
           messages={messages}
           setMessages={setMessages}
-          onVideosUpdate={setVideos}
+          onReportUpdate={
+            handleReportUpdate
+          }
           theme={theme}
         />
 
       </main>
 
 
-      {/* =====================================================
-          Intelligence Report
-          ===================================================== */}
+      {/* Intelligence Report */}
 
       <aside className="w-[42%] min-w-0 border-l border-slate-200 dark:border-slate-800">
 
         <ReportPanel
-          videos={videos}
+          reports={reports}
           theme={theme}
         />
 
