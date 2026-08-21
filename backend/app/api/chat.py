@@ -1,11 +1,18 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+)
+
 from sqlalchemy.orm import Session
+
+from pydantic import BaseModel, Field
 
 from app.db.database import get_db
 from app.db.models import Conversation, Message
-from pydantic import BaseModel, Field
 
 
 router = APIRouter(tags=["Chat"])
@@ -27,6 +34,10 @@ def chat(
     db: Session = Depends(get_db),
 ):
     try:
+        # =====================================================
+        # Get conversation
+        # =====================================================
+
         conversation = (
             db.query(Conversation)
             .filter(
@@ -42,6 +53,10 @@ def chat(
                 detail="Conversation not found",
             )
 
+        # =====================================================
+        # Save user message
+        # =====================================================
+
         user_message = Message(
             conversation_id=conversation.id,
             role="user",
@@ -50,6 +65,10 @@ def chat(
 
         db.add(user_message)
         db.commit()
+
+        # =====================================================
+        # Agent
+        # =====================================================
 
         agent_graph = (
             http_request
@@ -68,22 +87,45 @@ def chat(
 
         result = agent_graph.invoke(
             {
-                "user_message":
-                    request.message,
+                "user_message": request.message,
                 "route": "",
                 "top_n": 10,
                 "topic": "",
                 "trend_data": [],
                 "response": "",
+                "summary": "",
                 "messages": [],
             },
             config=config,
         )
 
+        # =====================================================
+        # Agent response
+        # =====================================================
+
         assistant_message_text = result.get(
             "response",
             "",
         )
+
+        summary = result.get(
+            "summary",
+            "",
+        )
+
+        trend_data = result.get(
+            "trend_data",
+            [],
+        )
+
+        top_n = result.get(
+            "top_n",
+            10,
+        )
+
+        # =====================================================
+        # Save assistant message
+        # =====================================================
 
         assistant_message = Message(
             conversation_id=conversation.id,
@@ -99,16 +141,18 @@ def chat(
 
         db.commit()
 
+        # =====================================================
+        # Response
+        # =====================================================
+
         return {
             "response": assistant_message_text,
-            "trend_data": result.get(
-                "trend_data",
-                [],
-            ),
-            "top_n": result.get(
-                "top_n",
-                10,
-            ),
+
+            "summary": summary,
+
+            "trend_data": trend_data,
+
+            "top_n": top_n,
         }
 
     except HTTPException:

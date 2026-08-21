@@ -30,3 +30,22 @@ Current YouTube Trends:
 Videos:
 {videos}
 """
+
+
+SUMMARY_PROMPT = """
+You are summarizing a YouTube trend analysis.
+
+Create ONE very short Vietnamese sentence.
+
+Rules:
+- Maximum 20 words.
+- Summarize the overall trend.
+- Do NOT list individual videos.
+- Do NOT include rankings.
+- Do NOT include URLs.
+- Do NOT explain your reasoning.
+- Return ONLY the sentence.
+
+Analysis:
+{analysis}
+"""

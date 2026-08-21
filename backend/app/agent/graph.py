@@ -4,8 +4,13 @@ from langgraph.graph import StateGraph, START, END
 
 from app.agent.state import AgentState
 from app.agent.prompts import ROUTER_PROMPT
-from app.agent.trend_prompts import TREND_ANALYSIS_PROMPT
-from app.agent.topic_prompts import TOPIC_EXTRACTION_PROMPT
+from app.agent.trend_prompts import (
+    TREND_ANALYSIS_PROMPT,
+    SUMMARY_PROMPT,
+)
+from app.agent.topic_prompts import (
+    TOPIC_EXTRACTION_PROMPT,
+)
 from app.agent.topic_analysis_prompts import (
     TOPIC_TREND_ANALYSIS_PROMPT,
 )
@@ -154,6 +159,7 @@ def rising_trend_node(
                 "để xác định trend đang tăng mạnh. "
                 "Cần ít nhất 2 snapshot."
             ),
+            "summary": "",
         }
 
     lines = [
@@ -193,10 +199,33 @@ def rising_trend_node(
 
         lines.append("")
 
+    analysis = "\n".join(lines)
+
+    summary_prompt = ChatPromptTemplate.from_template(
+        SUMMARY_PROMPT
+    )
+
+    summary_chain = summary_prompt | llm
+
+    summary_result = summary_chain.invoke(
+        {
+            "analysis": analysis,
+        }
+    )
+
+    summary = get_text_content(
+        summary_result
+    ).strip()
+
+    print(
+        f"[Summary] {summary}"
+    )
+
     return {
         **state,
         "trend_data": trends,
-        "response": "\n".join(lines),
+        "response": analysis,
+        "summary": summary,
     }
 
 
@@ -211,6 +240,7 @@ def model_node(
     return {
         **state,
         "response": "Đây là General",
+        "summary": "",
     }
 
 
@@ -230,6 +260,7 @@ def youtube_node(
     )
 
     # 1. Get requested number of trending videos
+
     videos = get_top_trending_videos(
         region_code="VN",
         max_results=top_n,
@@ -241,6 +272,7 @@ def youtube_node(
     )
 
     # 2. Calculate trend scores
+
     videos = score_videos(
         videos
     )
@@ -251,6 +283,7 @@ def youtube_node(
     )
 
     # 3. Save historical snapshot
+
     save_snapshot(
         videos
     )
@@ -261,11 +294,13 @@ def youtube_node(
     )
 
     # 4. Format data for Gemini
+
     videos_text = format_trending_videos(
         videos
     )
 
     # 5. Analyze trends with Gemini
+
     prompt = ChatPromptTemplate.from_template(
         TREND_ANALYSIS_PROMPT
     )
@@ -292,11 +327,35 @@ def youtube_node(
         "Analysis completed"
     )
 
-    # 6. Return state
+    # 6. Generate short summary
+
+    summary_prompt = ChatPromptTemplate.from_template(
+        SUMMARY_PROMPT
+    )
+
+    summary_chain = summary_prompt | llm
+
+    summary_result = summary_chain.invoke(
+        {
+            "analysis": analysis,
+        }
+    )
+
+    summary = get_text_content(
+        summary_result
+    ).strip()
+
+    print(
+        f"[Summary] {summary}"
+    )
+
+    # 7. Return state
+
     return {
         **state,
         "trend_data": videos,
         "response": analysis,
+        "summary": summary,
     }
 
 
@@ -394,10 +453,33 @@ def topic_trend_node(
         "Topic analysis completed"
     )
 
+    # Generate short summary
+
+    summary_prompt = ChatPromptTemplate.from_template(
+        SUMMARY_PROMPT
+    )
+
+    summary_chain = summary_prompt | llm
+
+    summary_result = summary_chain.invoke(
+        {
+            "analysis": analysis,
+        }
+    )
+
+    summary = get_text_content(
+        summary_result
+    ).strip()
+
+    print(
+        f"[Summary] {summary}"
+    )
+
     return {
         **state,
         "trend_data": videos,
         "response": analysis,
+        "summary": summary,
     }
 
 

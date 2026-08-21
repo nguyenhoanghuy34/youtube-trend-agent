@@ -11,6 +11,10 @@ class AgentState(TypedDict):
     topic: str
     trend_data: list
     response: str
+    summary: str
 
     # Conversation history của LangGraph
-    messages: Annotated[list[BaseMessage], add_messages]
+    messages: Annotated[
+        list[BaseMessage],
+        add_messages,
+    ]
