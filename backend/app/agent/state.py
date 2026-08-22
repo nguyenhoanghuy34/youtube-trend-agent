@@ -8,8 +8,10 @@ class AgentState(TypedDict):
     user_message: str
     route: str
     top_n: int
+    chart_requested: bool
     topic: str
     trend_data: list
+    chart_data: dict
     response: str
     summary: str
 

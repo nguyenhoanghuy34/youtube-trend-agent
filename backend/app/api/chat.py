@@ -90,8 +90,10 @@ def chat(
                 "user_message": request.message,
                 "route": "",
                 "top_n": 10,
+                "chart_requested": False,
                 "topic": "",
                 "trend_data": [],
+                "chart_data": {},
                 "response": "",
                 "summary": "",
                 "messages": [],
@@ -116,6 +118,11 @@ def chat(
         trend_data = result.get(
             "trend_data",
             [],
+        )
+
+        chart_data = result.get(
+            "chart_data",
+            {},
         )
 
         top_n = result.get(
@@ -151,6 +158,8 @@ def chat(
             "summary": summary,
 
             "trend_data": trend_data,
+
+            "chart_data": chart_data,
 
             "top_n": top_n,
         }

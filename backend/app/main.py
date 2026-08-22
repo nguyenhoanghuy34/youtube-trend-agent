@@ -1,3 +1,5 @@
+import sys
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -30,6 +32,12 @@ with engine.begin() as connection:
 # =========================================================
 # FastAPI
 # =========================================================
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 
 app = FastAPI(
     title="YouTube Trending Agent API",

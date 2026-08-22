@@ -8,6 +8,8 @@ VALID_ROUTES = {
     "TREND",
     "RISING_TREND",
     "TOPIC_TREND",
+    "TREND_CHART",
+    "TOPIC_TREND_CHART",
 }
 
 
@@ -67,6 +69,12 @@ def route_after_router(
 ) -> str:
 
     route = state["route"]
+
+    if route == "TREND_CHART":
+        return "trend_chart"
+
+    if route == "TOPIC_TREND_CHART":
+        return "topic_trend_chart"
 
     if route == "TREND":
         return "trend"

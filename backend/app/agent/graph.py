@@ -37,6 +37,10 @@ from app.agent.intent_router import (
     route_after_router,
 )
 
+from app.tools.chart_tool import (
+    build_like_view_chart,
+)
+
 from app.services.trend_service import (
     get_rising_trends,
 )
@@ -85,6 +89,65 @@ def get_text_content(result) -> str:
     return str(content)
 
 
+def wants_chart(user_message: str) -> bool:
+    text = user_message.lower()
+    keywords = [
+        "chart",
+        "plot",
+        "graph",
+        "biểu đồ",
+        "ve bieu do",
+        "vẽ biểu đồ",
+        "vẽ chart",
+        "like/view",
+        "like view",
+        "tỉ lệ",
+        "ty le",
+        "ratio",
+    ]
+    return any(keyword in text for keyword in keywords)
+
+
+def parse_top_n_from_text(user_message: str) -> int:
+    import re
+
+    match = re.search(r"\btop\s+(\d+)\b", user_message.lower())
+    if match:
+        try:
+            return max(1, int(match.group(1)))
+        except ValueError:
+            pass
+
+    match = re.search(r"\b(\d+)\s+(video|videos|mẩu|mục|bài)\b", user_message.lower())
+    if match:
+        try:
+            return max(1, int(match.group(1)))
+        except ValueError:
+            pass
+
+    return 10
+
+
+def compute_like_view_ratio(video: dict) -> float:
+    views = int(video.get("views", 0))
+    likes = int(video.get("likes", 0))
+    if views <= 0:
+        return 0.0
+    return round(likes / views, 6)
+
+
+def prepare_chart_data(videos: list[dict]) -> list[dict]:
+    chart_data = []
+    for video in videos:
+        chart_data.append(
+            {
+                **video,
+                "like_view_ratio": compute_like_view_ratio(video),
+            }
+        )
+    return chart_data
+
+
 # =========================================================
 # Router
 # =========================================================
@@ -92,6 +155,36 @@ def get_text_content(result) -> str:
 def router_node(
     state: AgentState,
 ) -> AgentState:
+
+    chart_requested = wants_chart(
+        state["user_message"]
+    )
+
+    if chart_requested:
+        top_n = parse_top_n_from_text(
+            state["user_message"]
+        )
+
+        print(
+            f"[Router] "
+            f"{state['user_message']}"
+        )
+
+        print(
+            "[Router] → TREND_CHART "
+            "(local heuristic)"
+        )
+
+        print(
+            f"[Router] → top_n={top_n}"
+        )
+
+        return {
+            **state,
+            "route": "TREND_CHART",
+            "top_n": top_n,
+            "chart_requested": True,
+        }
 
     prompt = ChatPromptTemplate.from_template(
         ROUTER_PROMPT
@@ -127,6 +220,7 @@ def router_node(
         **state,
         "route": route,
         "top_n": top_n,
+        "chart_requested": chart_requested,
     }
 
 
@@ -253,6 +347,7 @@ def youtube_node(
 ) -> AgentState:
 
     top_n = state["top_n"]
+    chart_requested = state.get("chart_requested", False)
 
     print(
         "[YouTube] "
@@ -273,7 +368,9 @@ def youtube_node(
 
     # 2. Calculate trend scores
 
-    videos = score_videos(
+    videos = score_videos(videos)
+
+    videos = prepare_chart_data(
         videos
     )
 
@@ -292,6 +389,17 @@ def youtube_node(
         "[Trend] "
         "Snapshot saved"
     )
+
+    if chart_requested:
+        return {
+            **state,
+            "trend_data": videos,
+            "chart_data": {},
+            "response": (
+                f"Đã lấy top {len(videos)} video và chuẩn bị dữ liệu để vẽ biểu đồ like/view."
+            ),
+            "summary": "Đã lấy dữ liệu và sẵn sàng vẽ biểu đồ.",
+        }
 
     # 4. Format data for Gemini
 
@@ -354,6 +462,7 @@ def youtube_node(
     return {
         **state,
         "trend_data": videos,
+        "chart_data": {},
         "response": analysis,
         "summary": summary,
     }
@@ -417,6 +526,10 @@ def topic_trend_node(
         max_results=top_n,
     )
 
+    videos = prepare_chart_data(
+        videos
+    )
+
     print(
         f"[YouTube] "
         f"Found {len(videos)} videos"
@@ -478,8 +591,54 @@ def topic_trend_node(
     return {
         **state,
         "trend_data": videos,
+        "chart_data": {},
         "response": analysis,
         "summary": summary,
+    }
+
+
+# =========================================================
+# Like/View Chart
+# =========================================================
+
+def like_view_chart_node(
+    state: AgentState,
+) -> AgentState:
+
+    videos = state.get("trend_data", [])
+    top_videos = [
+        {
+            **video,
+            "like_view_ratio": compute_like_view_ratio(video),
+        }
+        for video in videos[: state.get("top_n", 10)]
+    ]
+
+    print(
+        "[Chart] "
+        "Building like/view chart..."
+    )
+
+    chart = build_like_view_chart(
+        top_videos,
+        title="Top trending videos like/view ratio",
+    )
+
+    chart_lines = [
+        "Like/View ratio chart generated.",
+        f"Videos: {len(top_videos)}",
+    ]
+
+    for video in top_videos:
+        chart_lines.append(
+            f"#{video.get('rank')} {video.get('title')} - {video.get('like_view_ratio', 0):.2%}"
+        )
+
+    return {
+        **state,
+        "chart_data": chart,
+        "response": "\n".join(chart_lines),
+        "summary": "Biểu đồ tỉ lệ like/view đã được tạo.",
     }
 
 
@@ -523,6 +682,11 @@ def build_graph(checkpointer=None):
     )
 
     graph.add_node(
+        "like_view_chart",
+        like_view_chart_node,
+    )
+
+    graph.add_node(
         "rising_trend",
         rising_trend_node,
     )
@@ -546,8 +710,10 @@ def build_graph(checkpointer=None):
         {
             "model": "model",
             "trend": "youtube",
+            "trend_chart": "youtube",
             "rising_trend": "rising_trend",
             "topic_trend": "extract_topic",
+            "topic_trend_chart": "extract_topic",
         },
     )
 
@@ -574,13 +740,35 @@ def build_graph(checkpointer=None):
         END,
     )
 
-    graph.add_edge(
+    graph.add_conditional_edges(
+        "youtube",
+        lambda state: "like_view_chart"
+        if state.get("chart_requested")
+        else "end",
+        {
+            "like_view_chart": "like_view_chart",
+            "end": END,
+        },
+    )
+
+    graph.add_conditional_edges(
         "topic_trend",
-        END,
+        lambda state: "like_view_chart"
+        if state.get("chart_requested")
+        else "end",
+        {
+            "like_view_chart": "like_view_chart",
+            "end": END,
+        },
     )
 
     graph.add_edge(
         "rising_trend",
+        END,
+    )
+
+    graph.add_edge(
+        "like_view_chart",
         END,
     )
 

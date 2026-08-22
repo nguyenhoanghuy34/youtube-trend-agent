@@ -17,6 +17,10 @@ TREND:
 - Asking for popular/trending YouTube videos
 - General YouTube trend discovery
 
+TREND_CHART:
+- Asking to draw a chart for top trending YouTube videos
+- Asking for a like/view ratio chart, ranking chart, or visual comparison of top videos
+
 RISING_TREND:
 - Asking which trends are growing fastest
 - Asking what trend is increasing strongly
@@ -28,6 +32,10 @@ TOPIC_TREND:
 - Examples: AI, travel, fashion, gaming, technology
 - "Find trends about AI"
 - "What is trending about travel on YouTube?"
+
+TOPIC_TREND_CHART:
+- Asking to draw a chart for a specific topic's videos
+- Asking for a like/view ratio chart after searching a topic
 
 TOP_N RULES:
 
@@ -45,7 +53,8 @@ TOP_N RULES:
 
 ROUTING RULES:
 
-- If a specific topic is mentioned, use TOPIC_TREND.
+- If the user asks for a chart or visualization, prefer the *_CHART route.
+- If a specific topic is mentioned, use TOPIC_TREND or TOPIC_TREND_CHART.
 - If the user asks about growth or rapidly increasing trends, use RISING_TREND.
 - If the user asks general YouTube trending information, use TREND.
 - Otherwise use MODEL.
