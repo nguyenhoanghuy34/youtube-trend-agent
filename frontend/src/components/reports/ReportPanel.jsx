@@ -96,6 +96,20 @@ export default function ReportPanel({
               </div>
 
 
+              {/* Chart */}
+
+              {report.chart?.svg ? (
+                <div className="border-b border-slate-200 bg-slate-950 p-4 dark:border-slate-800">
+                  <div
+                    className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900"
+                    dangerouslySetInnerHTML={{
+                      __html: report.chart.svg,
+                    }}
+                  />
+                </div>
+              ) : null}
+
+
               {/* Videos */}
 
               <div className="space-y-4 p-4">

@@ -179,6 +179,7 @@ export default function ChatPanel({
           summary:
             data.summary || "",
           videos: sortedVideos,
+          chart: data.chart_data || null,
         });
       }
 

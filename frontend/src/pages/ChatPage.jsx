@@ -200,6 +200,7 @@ export default function ChatPage({
         id: `report-${Date.now()}`,
         summary: report.summary || "",
         videos: report.videos || [],
+        chart: report.chart || null,
       },
     ]);
   }
