@@ -1,6 +1,3 @@
-import VideoCard from "./VideoCard";
-
-
 export default function ReportPanel({
   reports = [],
   theme = "light",
@@ -112,23 +109,27 @@ export default function ReportPanel({
 
               {/* Videos */}
 
-              <div className="space-y-4 p-4">
-
-                {report.videos.map(
-                  (video) => (
-
-                    <VideoCard
-                      key={
-                        video.video_id
-                      }
-                      video={video}
-                      theme={theme}
-                    />
-
-                  )
-                )}
-
-              </div>
+              {!report.chart?.svg ? (
+                <div className="space-y-4 p-4">
+                  {report.videos.map((video) => (
+                    <div
+                      key={video.video_id}
+                      className={`rounded-lg border p-3 text-sm ${
+                        theme === "dark"
+                          ? "border-slate-800 text-slate-200"
+                          : "border-slate-200 text-slate-700"
+                      }`}
+                    >
+                      <div className="font-medium">
+                        {video.title}
+                      </div>
+                      <div className="mt-1 text-xs opacity-75">
+                        {video.channel}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
 
             </article>
 
