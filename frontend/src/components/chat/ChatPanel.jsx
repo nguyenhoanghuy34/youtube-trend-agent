@@ -180,10 +180,6 @@ export default function ChatPanel({
             data.summary || "",
           videos: sortedVideos,
           chart: data.chart_data || null,
-          replace: Boolean(
-            data.chart_data &&
-              data.chart_data.svg
-          ),
         });
       }
 

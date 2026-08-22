@@ -201,11 +201,6 @@ export default function ChatPage({
       chart: report.chart || null,
     };
 
-    if (report.replace) {
-      setReports([nextReport]);
-      return;
-    }
-
     setReports((prev) => [
       ...prev,
       nextReport,
