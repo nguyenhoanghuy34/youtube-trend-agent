@@ -194,14 +194,21 @@ export default function ChatPage({
       return;
     }
 
+    const nextReport = {
+      id: `report-${Date.now()}`,
+      summary: report.summary || "",
+      videos: report.videos || [],
+      chart: report.chart || null,
+    };
+
+    if (report.replace) {
+      setReports([nextReport]);
+      return;
+    }
+
     setReports((prev) => [
       ...prev,
-      {
-        id: `report-${Date.now()}`,
-        summary: report.summary || "",
-        videos: report.videos || [],
-        chart: report.chart || null,
-      },
+      nextReport,
     ]);
   }
 
