@@ -9,15 +9,7 @@ from app.schemas.conversation import (
     ConversationCreate,
     ConversationDetailResponse,
     ConversationResponse,
-    MessageCreate,
-    MessageResponse,
-)
-
-from app.schemas.conversation import (
-    ConversationCreate,
     ConversationUpdate,
-    ConversationDetailResponse,
-    ConversationResponse,
     MessageCreate,
     MessageResponse,
 )
@@ -117,9 +109,7 @@ def get_conversation(
 ):
     conversation = (
         db.query(Conversation)
-        .filter(
-            Conversation.id == conversation_id
-        )
+        .filter(Conversation.id == conversation_id)
         .first()
     )
 
@@ -149,9 +139,7 @@ def create_message(
 ):
     conversation = (
         db.query(Conversation)
-        .filter(
-            Conversation.id == conversation_id
-        )
+        .filter(Conversation.id == conversation_id)
         .first()
     )
 

@@ -14,9 +14,8 @@ DATA_DIR.mkdir(
 def save_snapshot(
     videos: list[dict],
 ):
-    timestamp = datetime.now(
-        timezone.utc
-    ).isoformat()
+    now = datetime.now(timezone.utc)
+    timestamp = now.isoformat()
 
     snapshot = {
         "timestamp": timestamp,
@@ -25,7 +24,7 @@ def save_snapshot(
 
     filename = (
         DATA_DIR
-        / f"snapshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        / f"snapshot_{now.strftime('%Y%m%d_%H%M%S')}.json"
     )
 
     with open(
