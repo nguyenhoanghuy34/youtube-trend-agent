@@ -15,25 +15,72 @@ from ..schemas.summary_schema import (
 )
 
 
+# ============================================================
+# Environment
+# ============================================================
+
 load_dotenv()
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL")
 
-if not GOOGLE_API_KEY:
-    raise ValueError("GOOGLE_API_KEY is missing")
 
+if not GEMINI_API_KEY:
+    raise ValueError(
+        "GEMINI_API_KEY is missing from .env"
+    )
+
+if not GEMINI_MODEL:
+    raise ValueError(
+        "GEMINI_MODEL is missing from .env"
+    )
+
+
+# ============================================================
+# Gemini Client
+# ============================================================
 
 client = genai.Client(
-    api_key=GOOGLE_API_KEY
+    api_key=GEMINI_API_KEY
 )
 
 
-MODEL_NAME = "gemini-2.5-flash"
+print(f"[Gemini] Model: {GEMINI_MODEL}")
 
+
+# ============================================================
+# Helper
+# ============================================================
+
+def clean_json_response(text: str) -> str:
+    """
+    Remove Markdown code fences from Gemini response.
+    """
+
+    text = text.strip()
+
+    if text.startswith("```json"):
+        text = text[7:]
+
+    elif text.startswith("```"):
+        text = text[3:]
+
+    if text.endswith("```"):
+        text = text[:-3]
+
+    return text.strip()
+
+
+# ============================================================
+# Batch Summarization
+# ============================================================
 
 def summarize_batch(
     comments: list[str]
 ) -> dict:
+    """
+    Summarize one batch of YouTube comments.
+    """
 
     comments_text = "\n".join(
         f"- {comment}"
@@ -45,27 +92,46 @@ def summarize_batch(
     )
 
     response = client.models.generate_content(
-        model=MODEL_NAME,
+        model=GEMINI_MODEL,
         contents=prompt
     )
 
-    text = response.text.strip()
+    if not response.text:
+        raise ValueError(
+            "Gemini returned an empty response"
+        )
 
-    # Remove markdown code fence if Gemini adds it
-    text = text.replace("```json", "")
-    text = text.replace("```", "")
-    text = text.strip()
+    text = clean_json_response(
+        response.text
+    )
 
-    data = json.loads(text)
+    try:
+        data = json.loads(text)
 
-    result = BatchSummary.model_validate(data)
+    except json.JSONDecodeError as e:
+
+        raise ValueError(
+            f"Gemini returned invalid JSON:\n{text}"
+        ) from e
+
+    result = BatchSummary.model_validate(
+        data
+    )
 
     return result.model_dump()
 
 
+# ============================================================
+# Final Summarization
+# ============================================================
+
 def summarize_final(
     batch_summaries: list[dict]
 ) -> dict:
+    """
+    Combine all batch summaries into
+    one final audience analysis.
+    """
 
     summaries_text = json.dumps(
         batch_summaries,
@@ -78,18 +144,30 @@ def summarize_final(
     )
 
     response = client.models.generate_content(
-        model=MODEL_NAME,
+        model=GEMINI_MODEL,
         contents=prompt
     )
 
-    text = response.text.strip()
+    if not response.text:
+        raise ValueError(
+            "Gemini returned an empty response"
+        )
 
-    text = text.replace("```json", "")
-    text = text.replace("```", "")
-    text = text.strip()
+    text = clean_json_response(
+        response.text
+    )
 
-    data = json.loads(text)
+    try:
+        data = json.loads(text)
 
-    result = FinalSummary.model_validate(data)
+    except json.JSONDecodeError as e:
+
+        raise ValueError(
+            f"Gemini returned invalid JSON:\n{text}"
+        ) from e
+
+    result = FinalSummary.model_validate(
+        data
+    )
 
     return result.model_dump()

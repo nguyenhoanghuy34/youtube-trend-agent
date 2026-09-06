@@ -1,8 +1,8 @@
-import re
 import os
+import re
 
-from googleapiclient.discovery import build
 from dotenv import load_dotenv
+from googleapiclient.discovery import build
 
 
 load_dotenv()
@@ -11,9 +11,7 @@ YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 
 
 def extract_video_id(url: str) -> str:
-    """
-    Extract YouTube video ID from common URL formats.
-    """
+    """Extract YouTube video ID from a URL."""
 
     patterns = [
         r"(?:v=)([A-Za-z0-9_-]{11})",
@@ -31,8 +29,12 @@ def extract_video_id(url: str) -> str:
 
 
 def get_youtube_client():
+    """Create YouTube API client."""
+
     if not YOUTUBE_API_KEY:
-        raise ValueError("YOUTUBE_API_KEY is missing")
+        raise ValueError(
+            "YOUTUBE_API_KEY is missing from .env"
+        )
 
     return build(
         "youtube",
@@ -42,6 +44,8 @@ def get_youtube_client():
 
 
 def get_video_title(video_id: str) -> str:
+    """Get YouTube video title."""
+
     youtube = get_youtube_client()
 
     response = youtube.videos().list(
@@ -49,7 +53,7 @@ def get_video_title(video_id: str) -> str:
         id=video_id
     ).execute()
 
-    if not response["items"]:
+    if not response.get("items"):
         raise ValueError("Video not found")
 
     return response["items"][0]["snippet"]["title"]
@@ -60,9 +64,7 @@ def get_comments(
     max_comments: int = 10000
 ) -> list[str]:
     """
-    Get YouTube comments using pagination.
-
-    Only one API page is held at a time.
+    Collect top-level YouTube comments using pagination.
     """
 
     youtube = get_youtube_client()
@@ -90,7 +92,8 @@ def get_comments(
                 ["textDisplay"]
             )
 
-            comments.append(comment)
+            if comment:
+                comments.append(comment)
 
             if len(comments) >= max_comments:
                 break

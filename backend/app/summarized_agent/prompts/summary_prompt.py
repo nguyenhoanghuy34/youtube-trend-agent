@@ -14,20 +14,20 @@ Your task:
 
 Return JSON with exactly this structure:
 
-{
+{{
     "summary": "short summary",
     "sentiment": "positive | neutral | negative | mixed",
     "topics": [
-        {
+        {{
             "name": "topic name",
             "sentiment": "positive | neutral | negative | mixed",
             "frequency": "low | medium | high"
-        }
+        }}
     ],
     "positive_points": [],
     "negative_points": [],
     "audience_insights": []
-}
+}}
 
 Comments:
 
@@ -57,21 +57,21 @@ Identify patterns across all batches.
 
 Return JSON with exactly this structure:
 
-{
+{{
     "overall_summary": "",
     "overall_sentiment": "positive | neutral | negative | mixed",
     "top_topics": [
-        {
+        {{
             "name": "",
             "sentiment": "",
             "importance": "low | medium | high"
-        }
+        }}
     ],
     "positive_points": [],
     "negative_points": [],
     "common_complaints": [],
     "audience_insights": []
-}
+}}
 
 Batch summaries:
 
