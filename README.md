@@ -32,25 +32,41 @@
 
 ---
 
-## 🏗️ Architecture
+## 🤖 Sub Agents
+
+### 💬 Comment Summarization Agent
+
+**Location:** `backend/app/summarized_agent/`
+
+A specialized sub-agent for collecting and summarizing comments from a specific YouTube video.
+
+**Responsibilities:**
+
+- 📥 Collect comments from a YouTube video
+- 🧩 Process large volumes of comments in batches
+- 📝 Summarize each batch of comments
+- 🧠 Aggregate batch summaries into a final summary
+- 🗑️ Temporarily store processed comments and remove them after processing
+
+**Workflow:**
 
 ```text
-┌─────────────────┐
-│    React UI     │
-│    Frontend     │
-└────────┬────────┘
-         │ HTTP
-         ▼
-┌─────────────────┐
-│    FastAPI      │
-│     Backend     │
-└────────┬────────┘
-         │
-    ┌────┴─────┐
-    ▼          ▼
-YouTube API   AI Agent
-              │
-        ┌─────┴─────┐
-        ▼           ▼
-    LangChain    Gemini
-```
+YouTube Video
+      │
+      ▼
+Fetch Comments
+      │
+      ▼
+Temporary Storage
+      │
+      ▼
+Batch Comments
+      │
+      ▼
+Summarize Each Batch
+      │
+      ▼
+Aggregate Summaries
+      │
+      ▼
+Final Comment Summary
