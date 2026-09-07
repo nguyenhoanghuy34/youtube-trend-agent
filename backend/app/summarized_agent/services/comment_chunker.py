@@ -1,6 +1,6 @@
 def chunk_comments(
     comments: list[str],
-    batch_size: int = 100
+    batch_size: int = 20
 ) -> list[list[str]]:
     """
     Split comments into batches.

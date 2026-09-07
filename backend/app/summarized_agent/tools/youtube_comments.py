@@ -61,7 +61,7 @@ def get_video_title(video_id: str) -> str:
 
 def get_comments(
     video_id: str,
-    max_comments: int = 10000
+    max_comments: int = 100
 ) -> list[str]:
     """
     Collect top-level YouTube comments using pagination.
@@ -80,7 +80,7 @@ def get_comments(
             maxResults=100,
             pageToken=next_page_token,
             textFormat="plainText",
-            order="relevance"
+            order="time"
         ).execute()
 
         for item in response.get("items", []):

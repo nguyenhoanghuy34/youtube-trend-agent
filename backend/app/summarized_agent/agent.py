@@ -42,7 +42,7 @@ def collect_comments(state: SummaryState):
 
     comments = get_comments(
         video_id,
-        max_comments=10000
+        max_comments=100
     )
 
     return {
@@ -67,7 +67,7 @@ def summarize_comments(state: SummaryState):
 
     batches = chunk_comments(
         comments,
-        batch_size=100
+        batch_size=20
     )
 
     summaries = []
